@@ -1,0 +1,370 @@
+---
+title: "Combined Rsem data"
+output: html_notebook
+---
+
+ 
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(reshape2)
+library(edgeR)
+library(fs)
+library(ggdist)
+library(tidyquant)
+library(DT)
+
+library(DESeq2)
+library(RColorBrewer)
+library(pheatmap)
+library(forcats)
+library(tidyr)
+library(dplyr)
+library(calibrate)
+library(biomaRt)
+library(digest)
+library(org.Hs.eg.db)
+
+
+```
+
+
+
+```{r}
+
+root_folder <- "/mnt/omics4tb2/SWEDISH_PDGSCs/processed_data/run1_2/"
+
+identifiers <- read.table("/mnt/omics4tb2/ishitaM/softwares/miner3/miner/data/identifier_mappings.txt", sep = "\t", header = T)
+
+identifiers.f <- identifiers |>
+  filter(Source == "Entrez Gene ID" | Source == "Gene Name")
+```
+
+
+```{r}
+#find samples with finished RNASeq analysis
+rnaseq_files <- fs::dir_ls(root_folder,recurse = T, regexp = ".genes.results", fail = FALSE)
+complete_rnaseq_files <- data.frame(path= rnaseq_files,row.names = NULL) |> separate(path, into=c("d1","d2","d3","d4","d5","d6","sample_id","d7","d8"), sep = "/") |> dplyr::select(sample_id)
+
+
+
+```
+
+
+
+```{r}
+#genC_file <- data.frame(stringsAsFactors = F)
+
+case_rnaseq_data <- read_delim(rnaseq_files[1],show_col_types = FALSE) |>
+     dplyr::select(gene_id,expected_count) |>
+     column_to_rownames("gene_id") |>
+     rownames_to_column("genes") |>
+     separate(genes, sep = "_", into = c("ensembl_id", "symbol")) |>
+     left_join(identifiers, by=c(ensembl_id = 'Preferred_Name')) |>
+     filter(Source == "Entrez Gene ID") |>
+     mutate(gene_id = paste0(symbol,"|",Name)) |>
+     dplyr::rename(!!complete_rnaseq_files$sample_id[1] := "expected_count") 
+
+
+total_cnt<- case_rnaseq_data |> dplyr::select(-gene_id,-symbol,-Name,-Source)
+total_cnt %>% group_by(ensembl_id) %>% summarise(sample_id[1] = max(sample_id[1]))
+
+for(i in 2:nrow(complete_rnaseq_files)){
+#genC_file <- case_rnaseq_data |> dplyr::select(-ensembl_id,-symbol,-Name,-Source)
+  case_rnaseq_data <- read_delim(rnaseq_files[i],show_col_types = FALSE) |> dplyr::select(gene_id,expected_count) |> column_to_rownames("gene_id") |> rownames_to_column("genes") |> separate(genes, sep = "_", into = c("ensembl_id", "symbol")) |> left_join(identifiers, by=c(ensembl_id = 'Preferred_Name')) |> filter(Source == "Entrez Gene ID") |> mutate(gene_id = paste0(symbol,"|",Name)) |> dplyr::rename(!!complete_rnaseq_files$sample_id[i] := "expected_count")
+genC_file <- case_rnaseq_data |> dplyr::select(-gene_id,-symbol,-Name,-Source)
+genC_file %>% group_by(ensembl_id) %>% summarise(sample_id[i] = max(sample_id[i]))
+ total_cnt <- full_join(total_cnt, genC_file, by = "ensembl_id")
+ 
+}
+
+```
+
+
+
+```{r}
+
+bRNAseq_run1b_count_2T <- total_cnt
+rownames(bRNAseq_run1b_count_2T) <- total_cnt$Name
+bRNAseq_run1b_count_2T <- bRNAseq_run1b_count_2T[-2]
+
+met_cell <-rep("SN553", 24)
+
+met_drug <- c("Control", "Disulfiram","Pitavastatin","Temozolomide","Control","Auranofin","Mefloquine","Mitoxantrone","Simvastatin","Sertraline","Albendazole","Auranofin","Bortezomib","Colchicine","Disulfiram","Pitavastatin","Temozolomide","Mefloquine","Mitoxantrone","Simvastatin","Sertraline","Albendazole","Bortezomib","Colchicine")
+met_rep <- c("R1","R1","R1","R1","R2","R2","R2","R2","R2","R2","R2","R1","R2","R2","R2","R2","R2","R1","R1","R1","R1","R1","R1","R1")
+
+
+met_dat <- cbind(colnames(bRNAseq_run1b_count_2T), met_cell, met_rep, met_drug)
+
+colnames(met_dat) <- c("Sample_id","Cell_line","Replicate","Treatment")
+
+```
+
+
+```{r}
+
+met_dat <- read.csv("~/Documents/GBM/R01_Swedish_GBM/Metadata_Run1Sheet1.csv", header = T, row.names = 1)
+
+#head(met_dat)
+sampleNL <- gsub("_L1","",colnames(bRNAseq_run1b_count_2T))
+colnames(bRNAseq_run1b_count_2T) <- sampleNL
+sample_liD<-as.data.frame(sampleNL)
+met_dat$ID <-rownames(met_dat)
+
+met_datCi <-merge(met_dat,sample_liD, by.x = "ID", by.y ="sampleNL")
+rownames(met_datCi) <- met_datCi$ID
+```
+
+
+
+```{r}
+
+library(DESeq2)
+library("pheatmap")
+
+dds <- DESeqDataSetFromMatrix(countData = round(bRNAseq_run1b_count_2T), colData = met_datCi, design= ~ Replicate + Treatment)
+
+dds$Treatment <- relevel(dds$Treatment, ref = "Control")
+
+ntd <- normTransform(dds)
+
+select <- order(rowMeans(counts(dds,normalized= F)),decreasing=TRUE)[1:200]
+df <- as.data.frame(colData(dds)[,c("Treatment","Cell.Line")])
+
+pheatmap(assay(ntd)[select,], cluster_rows=FALSE, show_rownames=FALSE, cluster_cols=T, annotation_col=df)
+```
+
+
+```{r}
+library("vsn")
+library(plotly)
+
+vsd <- vst(dds, blind=FALSE)
+ntd <- normTransform(dds)
+
+pcaData <- plotPCA(vsd, intgroup=c("Treatment", "Replicate"), returnData=TRUE)
+percentVar <- round(100 * attr(pcaData, "percentVar"))
+ggplot(pcaData, aes(PC1, PC2, color=Treatment, shape=Replicate)) +
+geom_point(size=3) + xlab(paste0("PC1: ",percentVar[1],"% variance")) + ylab(paste0("PC2: ",percentVar[2],"% variance")) + coord_fixed()
+
+```
+
+
+```{r}
+pc_set1 <-ggplot(pcaData, aes(PC1, PC2, color=Treatment, shape=Replicate)) +
+geom_point(size=3) + xlab(paste0("PC1: ",percentVar[1],"% variance")) + ylab(paste0("PC2: ",percentVar[2],"% variance")) + coord_fixed()
+ggplotly(pc_set1)
+
+```
+
+## Differential expression analysis
+
+Requirements:
+1. Add additional gene annotation (biomaRt package)
+2. Quality control: remove genes with low counts or expression; duplicate ids or missing ids, data visualization plots
+3. Normalization
+4. Differential expression
+5. Plots volcano or heatmaps
+6. Gene signatures
+7. Preparing data for MINER analysis
+
+
+```{r}
+meta_sn528 <- met_datCi %>% filter(Cell.Line == "SN528")
+meta_sn735 <- met_datCi %>% filter(Cell.Line == "SN735")
+meta_sn553 <- met_datCi %>% filter(Cell.Line == "SN553")
+sn528_counts <- bRNAseq_run1b_count_2T %>% select(meta_sn528$ID)
+sn553_counts <- bRNAseq_run1b_count_2T %>% select(meta_sn553$ID)
+sn735_counts <- bRNAseq_run1b_count_2T %>% select(meta_sn735$ID)
+
+
+
+```
+
+
+```{r}
+
+ddsMat_sn528 <- DESeqDataSetFromMatrix(countData = round(sn528_counts),
+                                 colData = meta_sn528,
+                                 design = ~ Replicate + Treatment)
+ddsMat_sn528$Treatment <- relevel(ddsMat_sn528$Treatment, ref = "Control")
+
+#Pre-filtering
+
+smallestGroupSize <- 2
+keep <- rowSums(counts(ddsMat_sn528) >= 10) >= smallestGroupSize
+ddsMat_sn528 <- ddsMat_sn528[keep,]
+
+ddsMat_sn528 <- DESeq(ddsMat_sn528)
+
+sn528_alB <- results(ddsMat_sn528, contrast=c("Treatment","Albendazole","Control"))
+sn528_alBSig <- subset(sn528_alB, padj < 0.1)
+sn528_aurN <- results(ddsMat_sn528, contrast=c("Treatment","Auranofin","Control"))
+sn528_aurNSig <- subset(sn528_aurN, padj < 0.1)
+sn528_bortz <- results(ddsMat_sn528, contrast=c("Treatment","Bortezomib","Control"))
+sn528_bortzSig <- subset(sn528_bortz, padj < 0.1)
+sn528_colc <- results(ddsMat_sn528, contrast=c("Treatment","Colchicine","Control"))
+sn528_colcSig <- subset(sn528_colc, padj < 0.1)
+sn528_disf <- results(ddsMat_sn528, contrast=c("Treatment","Disulfiram","Control"))
+sn528_disfSig <- subset(sn528_disf, padj < 0.1)
+sn528_mefq <- results(ddsMat_sn528, contrast=c("Treatment","Mefloquine","Control"))
+sn528_mefqSig <- subset(sn528_mefq, padj < 0.1)
+sn528_mitox <- results(ddsMat_sn528, contrast=c("Treatment","Mitoxantrone","Control"))
+sn528_mitoxSig <- subset(sn528_mitox, padj < 0.1)
+sn528_pita <- results(ddsMat_sn528, contrast=c("Treatment","Pitavastatin","Control"))
+sn528_pitaSig <- subset(sn528_pita, padj < 0.1)
+sn528_sert <- results(ddsMat_sn528, contrast=c("Treatment","Sertraline","Control"))
+sn528_serSig <- subset(sn528_sert, padj < 0.1)
+sn528_simv <- results(ddsMat_sn528, contrast=c("Treatment","Simvastatin","Control"))
+sn528_simvSig <- subset(sn528_simv, padj < 0.1)
+sn528_tem <- results(ddsMat_sn528, contrast=c("Treatment","Temozolomide","Control"))
+sn528_temSig <- subset(sn528_tem, padj < 0.1)
+
+
+```
+
+
+```{r}
+#sn553_counts <- bRNAseq_run1b_count_2T
+ddsMat_sn553 <- DESeqDataSetFromMatrix(countData = round(sn553_counts),
+                                 colData = meta_sn553,
+                                 design = ~ Replicate + Treatment)
+ddsMat_sn553$Treatment <- relevel(ddsMat_sn553$Treatment, ref = "Control")
+
+#Pre-filtering
+
+smallestGroupSize <- 2
+keep <- rowSums(counts(ddsMat_sn553) >= 10) >= smallestGroupSize
+ddsMat_sn553 <- ddsMat_sn553[keep,]
+
+ddsMat_sn553 <- DESeq(ddsMat_sn553)
+
+sn553_alB <- results(ddsMat_sn553, contrast=c("Treatment","Albendazole","Control"))
+sn553_alBSig <- subset(sn553_alB, padj < 0.1)
+sn553_aurN <- results(ddsMat_sn553, contrast=c("Treatment","Auranofin","Control"))
+sn553_aurNSig <- subset(sn553_aurN, padj < 0.1)
+sn553_bortz <- results(ddsMat_sn553, contrast=c("Treatment","Bortezomib","Control"))
+sn553_bortzSig <- subset(sn553_bortz, padj < 0.1)
+sn553_colc <- results(ddsMat_sn553, contrast=c("Treatment","Colchicine","Control"))
+sn553_colcSig <- subset(sn553_colc, padj < 0.1)
+sn553_disf <- results(ddsMat_sn553, contrast=c("Treatment","Disulfiram","Control"))
+sn553_disfSig <- subset(sn553_disf, padj < 0.1)
+sn553_mefq <- results(ddsMat_sn553, contrast=c("Treatment","Mefloquine","Control"))
+sn553_mefqSig <- subset(sn553_mefq, padj < 0.1)
+sn553_mitox <- results(ddsMat_sn553, contrast=c("Treatment","Mitoxantrone","Control"))
+sn553_mitoxSig <- subset(sn553_mitox, padj < 0.1)
+sn553_pita <- results(ddsMat_sn553, contrast=c("Treatment","Pitavastatin","Control"))
+sn553_pitaSig <- subset(sn553_pita, padj < 0.1)
+sn553_sert <- results(ddsMat_sn553, contrast=c("Treatment","Sertraline","Control"))
+sn553_serSig <- subset(sn553_sert, padj < 0.1)
+sn553_simv <- results(ddsMat_sn553, contrast=c("Treatment","Simvastatin","Control"))
+sn553_simvSig <- subset(sn553_simv, padj < 0.1)
+sn553_tem <- results(ddsMat_sn553, contrast=c("Treatment","Temozolomide","Control"))
+sn553_temSig <- subset(sn553_tem, padj < 0.1)
+
+
+```
+
+
+```{r}
+
+ddsMat_sn735 <- DESeqDataSetFromMatrix(countData = round(sn735_counts),
+                                 colData = meta_sn735,
+                                 design = ~ Replicate + Treatment)
+ddsMat_sn735$Treatment <- relevel(ddsMat_sn735$Treatment, ref = "Control")
+
+#Pre-filtering
+
+smallestGroupSize <- 2
+keep <- rowSums(counts(ddsMat_sn735) >= 10) >= smallestGroupSize
+ddsMat_sn735 <- ddsMat_sn735[keep,]
+
+ddsMat_sn735 <- DESeq(ddsMat_sn735)
+
+sn735_alB <- results(ddsMat_sn735, contrast=c("Treatment","Albendazole","Control"))
+sn735_alBSig <- subset(sn735_alB, padj < 0.1)
+sn735_aurN <- results(ddsMat_sn735, contrast=c("Treatment","Auranofin","Control"))
+sn735_aurNSig <- subset(sn735_aurN, padj < 0.1)
+sn735_bortz <- results(ddsMat_sn735, contrast=c("Treatment","Bortezomib","Control"))
+sn735_bortzSig <- subset(sn735_bortz, padj < 0.1)
+sn735_colc <- results(ddsMat_sn735, contrast=c("Treatment","Colchicine","Control"))
+sn735_colcSig <- subset(sn735_colc, padj < 0.1)
+sn735_disf <- results(ddsMat_sn735, contrast=c("Treatment","Disulfiram","Control"))
+sn735_disfSig <- subset(sn735_disf, padj < 0.1)
+sn735_mefq <- results(ddsMat_sn735, contrast=c("Treatment","Mefloquine","Control"))
+sn735_mefqSig <- subset(sn735_mefq, padj < 0.1)
+sn735_mitox <- results(ddsMat_sn735, contrast=c("Treatment","Mitoxantrone","Control"))
+sn735_mitoxSig <- subset(sn735_mitox, padj < 0.1)
+sn735_pita <- results(ddsMat_sn735, contrast=c("Treatment","Pitavastatin","Control"))
+sn735_pitaSig <- subset(sn735_pita, padj < 0.1)
+sn735_sert <- results(ddsMat_sn735, contrast=c("Treatment","Sertraline","Control"))
+sn735_serSig <- subset(sn735_sert, padj < 0.1)
+sn735_simv <- results(ddsMat_sn735, contrast=c("Treatment","Simvastatin","Control"))
+sn735_simvSig <- subset(sn735_simv, padj < 0.1)
+sn735_tem <- results(ddsMat_sn735, contrast=c("Treatment","Temozolomide","Control"))
+sn735_temSig <- subset(sn735_tem, padj < 0.1)
+
+```
+
+
+
+```{r}
+
+#dds <- DESeqDataSetFromMatrix(countData = round(bRNAseq_run1b_count_2T), colData = met_datCi, design= ~ Replicate + Treatment)
+
+#dds$Treatment <- relevel(dds$Treatment, ref = "Control")
+
+ddsMat <- DESeqDataSetFromMatrix(countData = round(bRNAseq_run1b_count_2T),
+                                 colData = met_datCi,
+                                 design = ~ Cell.Line + Treatment)
+ddsMat$Treatment <- relevel(ddsMat$Treatment, ref = "Control")
+
+#Pre-filtering
+
+smallestGroupSize <- 2
+keep <- rowSums(counts(ddsMat) >= 10) >= smallestGroupSize
+ddsMat <- ddsMat[keep,]
+
+#Specify reference
+##dds$condition <- relevel(dds$condition, ref = "Control")
+
+
+
+
+
+```
+
+
+
+```{r}
+
+ddsMat <- DESeq(ddsMat)
+#res_all <- results(ddsMat)
+#res_all
+
+res_alB <- results(ddsMat, contrast=c("Treatment","Albendazole","Control"))
+res_alBSig <- subset(res_alB, padj < 0.1)
+res_aurN <- results(ddsMat, contrast=c("Treatment","Auranofin","Control"))
+res_aurNSig <- subset(res_aurN, padj < 0.1)
+res_bortz <- results(ddsMat, contrast=c("Treatment","Bortezomib","Control"))
+res_bortzSig <- subset(res_bortz, padj < 0.1)
+res_colc <- results(ddsMat, contrast=c("Treatment","Colchicine","Control"))
+res_colcSig <- subset(res_colc, padj < 0.1)
+res_disf <- results(ddsMat, contrast=c("Treatment","Disulfiram","Control"))
+res_disfSig <- subset(res_disf, padj < 0.1)
+res_mefq <- results(ddsMat, contrast=c("Treatment","Mefloquine","Control"))
+res_mefqSig <- subset(res_mefq, padj < 0.1)
+res_mitox <- results(ddsMat, contrast=c("Treatment","Mitoxantrone","Control"))
+res_mitoxSig <- subset(res_mitox, padj < 0.1)
+res_pita <- results(ddsMat, contrast=c("Treatment","Pitavastatin","Control"))
+res_pitaSig <- subset(res_pita, padj < 0.1)
+res_sert <- results(ddsMat, contrast=c("Treatment","Sertraline","Control"))
+res_serSig <- subset(res_sert, padj < 0.1)
+res_simv <- results(ddsMat, contrast=c("Treatment","Simvastatin","Control"))
+res_simvSig <- subset(res_simv, padj < 0.1)
+res_tem <- results(ddsMat, contrast=c("Treatment","Temozolomide","Control"))
+res_temSig <- subset(res_tem, padj < 0.1)
+
+```
+
