@@ -1,0 +1,1113 @@
+---
+title: "RNA sequencing analysis run 2"
+output: html_notebook
+---
+
+Samples: 75-178
+Cell lines: SN667, SN677, SN534, SN529
+Drugs: 11
+
+
+```{r}
+#Librarires
+
+library(tidyverse)
+library(ggplot2)
+library(reshape2)
+library(edgeR)
+library(fs)
+library(ggdist)
+library(tidyquant)
+library(DT)
+#library(DESeq2)
+library(pheatmap)
+library(DESeq2)
+library(RColorBrewer)
+library(pheatmap)
+library(forcats)
+library(tidyr)
+library(dplyr)
+library(calibrate)
+library(biomaRt)
+library(digest)
+library(org.Hs.eg.db)
+library(vsn)
+library(plotly)
+library(ggplot2)
+library(ggrepel)
+library(ComplexHeatmap)
+
+```
+
+
+
+```{r}
+
+root_folder <- "/users/imukherj/omics4tb2/SWEDISH_PDGSCs/processed_data/run2/"
+
+identifiers <- read.table("/users/imukherj/omics4tb2/ishitaM/softwares/miner3/miner/data/identifier_mappings.txt", sep = "\t", header = T)
+
+identifiers.f <- identifiers |>
+  filter(Source == "Entrez Gene ID" | Source == "Gene Name")
+
+rnaseq_files <- fs::dir_ls(root_folder,recurse = T, regexp = ".genes.results", fail = FALSE)
+complete_rnaseq_files <- data.frame(path= rnaseq_files,row.names = NULL) |> separate(path, into=c("d1","d2","d3","d4","d5","d6","d7","sample_id","d8","d9"), sep = "/") |> dplyr::select(sample_id)
+
+case_rnaseq_data <- read_delim(rnaseq_files[1],show_col_types = FALSE) |>
+     dplyr::select(gene_id,expected_count) |>
+     column_to_rownames("gene_id") |>
+     rownames_to_column("genes") |>
+     separate(genes, sep = "_", into = c("ensembl_id", "symbol")) |>
+     left_join(identifiers, by=c(ensembl_id = 'Preferred_Name')) |>
+     filter(Source == "Entrez Gene ID") |>
+     mutate(gene_id = paste0(symbol,"|",Name)) |>
+     dplyr::rename(!!complete_rnaseq_files$sample_id[1] := "expected_count") 
+
+
+total_cnt<- case_rnaseq_data |> dplyr::select(-gene_id,-symbol,-ensembl_id,-Source)
+#total_cnt %>% group_by(ensembl_id) %>% summarise(sample_id[1] = max(sample_id[1]))
+
+for(i in 2:nrow(complete_rnaseq_files)){
+#genC_file <- case_rnaseq_data |> dplyr::select(-ensembl_id,-symbol,-Name,-Source)
+  case_rnaseq_data <- read_delim(rnaseq_files[i],show_col_types = FALSE) |> dplyr::select(gene_id,expected_count) |> column_to_rownames("gene_id") |> rownames_to_column("genes") |> separate(genes, sep = "_", into = c("ensembl_id", "symbol")) |> left_join(identifiers, by=c(ensembl_id = 'Preferred_Name')) |> filter(Source == "Entrez Gene ID") |> mutate(gene_id = paste0(symbol,"|",Name)) |> dplyr::rename(!!complete_rnaseq_files$sample_id[i] := "expected_count")
+genC_file <- case_rnaseq_data |> dplyr::select(-gene_id,-symbol,-ensembl_id,-Source)
+#genC_file %>% group_by(ensembl_id) %>% summarise(sample_id[i] = max(sample_id[i]))
+ total_cnt <- full_join(total_cnt, genC_file, by = "Name")
+ 
+ 
+ 
+}
+
+bRNAseq_run1b_count_2T <- total_cnt
+rownames(bRNAseq_run1b_count_2T) <- total_cnt$Name
+bRNAseq_run1b_count_2T <- bRNAseq_run1b_count_2T[-2]
+
+
+```
+
+
+
+```{r}
+
+#Metadata
+
+met_dat <- read.csv("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/Metadata_set2- Sheet1.csv", header = T, row.names = 1)
+
+#head(met_dat)
+sampleNL <- gsub("_L1","",colnames(bRNAseq_run1b_count_2T))
+colnames(bRNAseq_run1b_count_2T) <- sampleNL
+sample_liD<-as.data.frame(sampleNL)
+met_dat$ID <-rownames(met_dat)
+
+met_dat2S <- met_dat %>% mutate(Samp_Name = paste(ID,Name,sep = "_")) 
+met_datCi <-merge(met_dat2S,sample_liD, by.x = "Samp_Name", by.y ="sampleNL")
+rownames(met_datCi) <- met_datCi$Samp_Name
+
+
+
+```
+
+#Exploratory analysis
+
+```{r}
+
+dds <- DESeqDataSetFromMatrix(countData = round(bRNAseq_run1b_count_2T), colData = met_datCi, design= ~ Replicate + Treatment)
+
+dds$Treatment <- relevel(dds$Treatment, ref = "Control")
+
+ntd <- normTransform(dds)
+
+select <- order(rowMeans(counts(dds,normalized= F)),decreasing=TRUE)[1:1000]
+df <- as.data.frame(colData(dds)[,c("Treatment","Cell.Line")])
+
+pheatmap(assay(ntd)[select,], cluster_rows=FALSE, show_rownames=FALSE, cluster_cols=T, annotation_col=df)
+
+
+
+```
+
+
+
+```{r}
+
+
+vsd <- vst(dds, blind=FALSE)
+ntd <- normTransform(dds)
+
+pcaData <- plotPCA(vsd, intgroup=c("Treatment", "Cell.Line"), returnData=TRUE)
+percentVar <- round(100 * attr(pcaData, "percentVar"))
+ggplot(pcaData, aes(PC1, PC2, color=Treatment, shape=Cell.Line)) +
+geom_point(size=3) + xlab(paste0("PC1: ",percentVar[1],"% variance")) + ylab(paste0("PC2: ",percentVar[2],"% variance")) + coord_fixed()
+
+```
+
+
+
+```{r}
+
+pc_set1 <-ggplot(pcaData, aes(PC1, PC2, color=Treatment, shape=Cell.Line)) +
+geom_point(size=3) + xlab(paste0("PC1: ",percentVar[1],"% variance")) + ylab(paste0("PC2: ",percentVar[2],"% variance")) + coord_fixed()
+ggplotly(pc_set1)
+
+
+
+```
+
+
+
+
+## Differential expression analysis
+
+Requirements:
+1. Add additional gene annotation (biomaRt package)
+2. Quality control: remove genes with low counts or expression; duplicate ids or missing ids, data visualization plots
+3. Normalization
+4. Differential expression
+5. Plots volcano or heatmaps
+6. Gene signatures
+7. Preparing data for MINER analysis
+
+
+```{r}
+
+meta_sn529 <- met_datCi %>% filter(Cell.Line == "SN529")
+meta_sn677 <- met_datCi %>% filter(Cell.Line == "SN677")
+meta_sn534 <- met_datCi %>% filter(Cell.Line == "SN534")
+meta_sn667 <- met_datCi %>% filter(Cell.Line == "SN667")
+
+sn529_counts <- bRNAseq_run1b_count_2T %>% select(meta_sn529$Samp_Name)
+sn534_counts <- bRNAseq_run1b_count_2T %>% select(meta_sn534$Samp_Name)
+sn677_counts <- bRNAseq_run1b_count_2T %>% select(meta_sn677$Samp_Name)
+sn667_counts <- bRNAseq_run1b_count_2T %>% select(meta_sn667$Samp_Name)
+
+
+```
+
+
+
+```{r}
+samp_list <- unique(met_datCi$Cell.Line)
+drug_list <- unique(met_datCi$Treatment)
+
+```
+
+
+```{r}
+
+identifiers_sub <- identifiers |> filter(Source == "Gene Name")
+identifiers_sub2 <- identifiers |> filter(Source == "Entrez Gene ID" )
+id_mult <- merge(identifiers_sub, identifiers_sub2, by=c("Preferred_Name"))
+top_allDrugs <- c()
+
+```
+
+
+
+```{r}
+
+for(i in 1:length(samp_list)){
+  
+  meta_cell <- met_datCi %>% filter(Cell.Line == samp_list[i])
+  cell_counts <- bRNAseq_run1b_count_2T %>% select(meta_cell$Samp_Name)
+  meta_cell$Replicate <- as.factor(meta_cell$Replicate)
+  meta_cell$Cell.Line <- as.factor(meta_cell$Cell.Line)
+  meta_cell$Treatment <- as.factor(meta_cell$Treatment)
+  
+  ddsMat <- DESeqDataSetFromMatrix(countData = round(cell_counts),
+                                  colData = meta_cell,
+                                  design = ~ Replicate + Treatment)
+  ddsMat$Treatment <- relevel(ddsMat$Treatment, ref = "Control")
+  smallestGroupSize <- 2
+  keep <- rowSums(counts(ddsMat) >= 10) >= smallestGroupSize
+  ddsMat <- ddsMat[keep,]
+
+  ddsMat <- DESeq(ddsMat)
+  
+  mainDir <- "/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal"
+  subDir <- samp_list[i]
+
+if (file.exists(subDir)){
+    setwd(file.path(mainDir, subDir))
+} else {
+    dir.create(file.path(mainDir, subDir))
+    setwd(file.path(mainDir, subDir))
+    
+}
+
+  #print("Cellline",samp_list[i])
+  cell_alB <- results(ddsMat, contrast=c("Treatment","Albendazole","Control"))
+  cell_alBSig <- subset(cell_alB, padj < 0.1)
+  cell_alBSigD <- as.data.frame(cell_alBSig) %>% rownames_to_column("GeneID")
+  cell_alBSig_A <- right_join(id_mult, cell_alBSigD,by =c("Name.y" = "GeneID"))
+  write.table(cell_alBSig_A,"DE_albendazole.txt")
+  topGenes_Alb <- list(alb = head(order(cell_alBSig$padj),1000))
+
+  if(nrow(cell_alBSig_A) != 0){
+  cell_alBSig_A$diffexpressed <- "NO"
+  cell_alBSig_A$diffexpressed[cell_alBSig_A$log2FoldChange > 1 & cell_alBSig_A$pvalue < 0.05] <-"UP"
+  cell_alBSig_A$diffexpressed[cell_alBSig_A$log2FoldChange < -1 & cell_alBSig_A$pvalue < 0.05] <- "DOWN"
+  cell_alBSig_A$delabel <- NA
+  cell_alBSig_A$delabel[cell_alBSig_A$diffexpressed != "NO"] <-        cell_alBSig_A$Name.x[cell_alBSig_A$diffexpressed != "NO"]
+  
+  
+        alUP <- nrow(cell_alBSig_A %>% filter(diffexpressed == "UP")) 
+       alDN <- nrow(cell_alBSig_A %>% filter(diffexpressed == "DOWN"))
+        
+  Al_dif <- paste(samp_list[i], "Albendazole", "UP", alUP, "DN", alDN)
+  print(Al_dif)
+  ggplot(data=cell_alBSig_A, aes(x=log2FoldChange, y=-log10(pvalue), label=delabel, col=diffexpressed)) + geom_point() + theme_minimal() +   geom_text_repel() + scale_color_manual(values=c("blue", "black", "red")) + geom_vline(xintercept=c(-1, 1), col="red") +
+geom_hline(yintercept=-log10(0.05), col="red", ) + theme(text = element_text(size= 16))
+  ggsave("DE_albendazole.png", device = "png",units = "in", dpi = 300, height = 4, width = 5)
+  }
+  
+  try(cell_aurN <- results(ddsMat, contrast=c("Treatment","Auranofin","Control")), silent = T)
+  if(exists("cell_aurN", inherits = F)){
+  cell_aurNSig <- subset(cell_aurN, padj < 0.1)
+  cell_aurNSigD <- as.data.frame(cell_aurNSig) %>% rownames_to_column("GeneID")
+  cell_aurNSig_A <- right_join(id_mult, cell_aurNSigD,by =c("Name.y" = "GeneID"))
+  write.table(cell_aurNSig_A,"DE_auranofin.txt")
+  topGenes_Aur <- list(aur = head(order(cell_aurNSig$padj),1000))
+  }
+  if(exists("cell_aurNSig_A", inherits = F) != 0){
+  cell_aurNSig_A$diffexpressed <- "NO"
+  cell_aurNSig_A$diffexpressed[cell_aurNSig_A$log2FoldChange > 1 & cell_aurNSig_A$pvalue < 0.05] <-"UP"
+  cell_aurNSig_A$diffexpressed[cell_aurNSig_A$log2FoldChange < -1 & cell_aurNSig_A$pvalue < 0.05] <- "DOWN"
+  cell_aurNSig_A$delabel <- NA
+  cell_aurNSig_A$delabel[cell_aurNSig_A$diffexpressed != "NO"] <-        cell_aurNSig_A$Name.x[cell_aurNSig_A$diffexpressed != "NO"]
+  
+   
+  An_Up<- nrow(cell_aurNSig_A %>% filter(diffexpressed == "UP"))
+  An_Dn <- nrow(cell_aurNSig_A %>% filter(diffexpressed == "DOWN"))
+  An_diff <- paste(samp_list[i], "auranofin","UP", An_Up, "DN", An_Dn)
+  print(An_diff)
+  
+  ggplot(data=cell_aurNSig_A, aes(x=log2FoldChange, y=-log10(pvalue), label=delabel, col=diffexpressed)) + geom_point() + theme_minimal() +   geom_text_repel() + scale_color_manual(values=c("blue", "black", "red")) + geom_vline(xintercept=c(-1, 1), col="red") +
+geom_hline(yintercept=-log10(0.05), col="red", ) + theme(text = element_text(size= 16))
+  ggsave("DE_auranofin.png", device = "png",units = "in", dpi = 300, height = 4, width = 5)
+  }
+  
+  cell_bortz <- results(ddsMat, contrast=c("Treatment","Bortezomib","Control"))
+  cell_bortzSig <- subset(cell_bortz, padj < 0.1)
+  cell_bortzSigD <- as.data.frame(cell_bortzSig) %>% rownames_to_column("GeneID")
+  cell_bortzSig_A <- right_join(id_mult, cell_bortzSigD,by =c("Name.y" = "GeneID"))
+  write.table(cell_bortzSig_A,"DE_bortezomib.txt")
+  topGenes_bor <- list(bor = head(order(cell_bortzSig$padj),1000))
+  
+  if(nrow(cell_bortzSig_A) != 0){
+  cell_bortzSig_A$diffexpressed <- "NO"
+  cell_bortzSig_A$diffexpressed[cell_bortzSig_A$log2FoldChange > 1 & cell_bortzSig_A$pvalue < 0.05] <-"UP"
+  cell_bortzSig_A$diffexpressed[cell_bortzSig_A$log2FoldChange < -1 & cell_bortzSig_A$pvalue < 0.05] <- "DOWN"
+  cell_bortzSig_A$delabel <- NA
+  cell_bortzSig_A$delabel[cell_bortzSig_A$diffexpressed != "NO"] <-        cell_bortzSig_A$Name.x[cell_bortzSig_A$diffexpressed != "NO"]
+  
+      BzUp  <- nrow(cell_bortzSig_A %>% filter(diffexpressed == "UP"))
+      BzDn  <- nrow(cell_bortzSig_A %>% filter(diffexpressed == "DOWN"))
+      Bz_diff <- paste(samp_list[i], "bortezomib","UP", BzUp, "DN", BzDn)
+      print(Bz_diff)
+        
+  ggplot(data=cell_bortzSig_A, aes(x=log2FoldChange, y=-log10(pvalue), label=delabel, col=diffexpressed)) + geom_point() + theme_minimal() +   geom_text_repel() + scale_color_manual(values=c("blue", "black", "red")) + geom_vline(xintercept=c(-1, 1), col="red") +
+geom_hline(yintercept=-log10(0.05), col="red", ) + theme(text = element_text(size= 16))
+  ggsave("DE_bortezomib.png", device = "png",units = "in", dpi = 300, height = 4, width = 5)
+  }
+  
+  cell_colc <- results(ddsMat, contrast=c("Treatment","Colchicine","Control"))
+  cell_colcSig <- subset(cell_colc, padj < 0.1)
+  cell_colcSigD <- as.data.frame(cell_colcSig) %>% rownames_to_column("GeneID")
+  cell_colcSig_A <- right_join(id_mult, cell_colcSigD,by =c("Name.y" = "GeneID"))
+  write.table(cell_colcSig_A,"DE_colchicine.txt")
+  topGenes_col <- list(colc = head(order(cell_colcSig$padj),1000))
+  
+  if(nrow(cell_colcSig_A) != 0){
+  cell_colcSig_A$diffexpressed <- "NO"
+  cell_colcSig_A$diffexpressed[cell_colcSig_A$log2FoldChange > 1 & cell_colcSig_A$pvalue < 0.05] <-"UP"
+  cell_colcSig_A$diffexpressed[cell_colcSig_A$log2FoldChange < -1 & cell_colcSig_A$pvalue < 0.05] <- "DOWN"
+  cell_colcSig_A$delabel <- NA
+  cell_colcSig_A$delabel[cell_colcSig_A$diffexpressed != "NO"] <-        cell_colcSig_A$Name.x[cell_colcSig_A$diffexpressed != "NO"]
+  
+        ColUp <- nrow(cell_colcSig_A %>% filter(diffexpressed == "UP")) 
+        ColDn <- nrow(cell_colcSig_A %>% filter(diffexpressed == "DOWN"))
+        Col_Diff <- paste(samp_list[i], "colchicine","UP", ColUp, "DN", ColDn)
+        print(Col_Diff)
+        
+  ggplot(data=cell_colcSig_A, aes(x=log2FoldChange, y=-log10(pvalue), label=delabel, col=diffexpressed)) + geom_point() + theme_minimal() +   geom_text_repel() + scale_color_manual(values=c("blue", "black", "red")) + geom_vline(xintercept=c(-1, 1), col="red") +
+geom_hline(yintercept=-log10(0.05), col="red", ) + theme(text = element_text(size= 16))
+  ggsave("DE_colchicine.png", device = "png",units = "in", dpi = 300, height = 4, width = 5)
+  }
+  
+  
+  cell_disf <- results(ddsMat, contrast=c("Treatment","Disulfiram","Control"))
+  cell_disfSig <- subset(cell_disf, padj < 0.1)
+  cell_disfSigD <- as.data.frame(cell_disfSig) %>% rownames_to_column("GeneID")
+  cell_disfSig_A <- right_join(id_mult, cell_disfSigD,by =c("Name.y" = "GeneID"))
+  write.table(cell_disfSig_A,"DE_disulfiram.txt")
+  topGenes_dsf <- list(disf = head(order(cell_disfSig$padj),1000))
+  
+  if(nrow(cell_disfSig_A) != 0){
+  cell_disfSig_A$diffexpressed <- "NO"
+  cell_disfSig_A$diffexpressed[cell_disfSig_A$log2FoldChange > 1 & cell_disfSig_A$pvalue < 0.05] <-"UP"
+  cell_disfSig_A$diffexpressed[cell_disfSig_A$log2FoldChange < -1 & cell_disfSig_A$pvalue < 0.05] <- "DOWN"
+  cell_disfSig_A$delabel <- NA
+  cell_disfSig_A$delabel[cell_disfSig_A$diffexpressed != "NO"] <-        cell_disfSig_A$Name.x[cell_disfSig_A$diffexpressed != "NO"]
+  
+   
+  DsfUP <-  nrow(cell_disfSig_A %>% filter(diffexpressed == "UP")) 
+  DsfDn <-  nrow(cell_disfSig_A %>% filter(diffexpressed == "DOWN"))
+  Dsf_diff <- paste(samp_list[i], "disulfiram","UP", DsfUP, "DN", DsfDn)
+  print(Dsf_diff)
+        
+  ggplot(data=cell_disfSig_A, aes(x=log2FoldChange, y=-log10(pvalue), label=delabel, col=diffexpressed)) + geom_point() + theme_minimal() +   geom_text_repel() + scale_color_manual(values=c("blue", "black", "red")) + geom_vline(xintercept=c(-1, 1), col="red") +
+geom_hline(yintercept=-log10(0.05), col="red", ) + theme(text = element_text(size= 16))
+  ggsave("DE_disulfiram.png", device = "png",units = "in", dpi = 300, height = 4, width = 5)
+  }
+  
+  cell_mefq <- results(ddsMat, contrast=c("Treatment","Mefloquine","Control"))
+  cell_mefqSig <- subset(cell_mefq, padj < 0.1)
+  cell_mefqSigD <- as.data.frame(cell_mefqSig) %>% rownames_to_column("GeneID")
+  cell_mefqSig_A <- right_join(id_mult, cell_mefqSigD,by =c("Name.y" = "GeneID"))
+  write.table(cell_mefqSig_A,"DE_mefloquine.txt")
+  topGenes_mef <- list(mefq = head(order(cell_mefqSig$padj),1000))
+  
+  if(nrow(cell_mefqSig_A) != 0){
+  cell_mefqSig_A$diffexpressed <- "NO"
+  cell_mefqSig_A$diffexpressed[cell_mefqSig_A$log2FoldChange > 1 & cell_mefqSig_A$pvalue < 0.05] <-"UP"
+  cell_mefqSig_A$diffexpressed[cell_mefqSig_A$log2FoldChange < -1 & cell_mefqSig_A$pvalue < 0.05] <- "DOWN"
+  cell_mefqSig_A$delabel <- NA
+  cell_mefqSig_A$delabel[cell_mefqSig_A$diffexpressed != "NO"] <-        cell_mefqSig_A$Name.x[cell_mefqSig_A$diffexpressed != "NO"]
+  
+          mefUP <- nrow(cell_mefqSig_A %>% filter(diffexpressed == "UP"))
+        mefDn <- nrow(cell_mefqSig_A %>% filter(diffexpressed == "DOWN"))
+  mef_dif <- paste(samp_list[i], "mefloquine","UP", mefUP, "DN", mefDn)
+  print(mef_dif)
+        
+  ggplot(data=cell_mefqSig_A, aes(x=log2FoldChange, y=-log10(pvalue), label=delabel, col=diffexpressed)) + geom_point() + theme_minimal() +   geom_text_repel() + scale_color_manual(values=c("blue", "black", "red")) + geom_vline(xintercept=c(-1, 1), col="red") +
+geom_hline(yintercept=-log10(0.05), col="red", ) + theme(text = element_text(size= 16))
+  ggsave("DE_mefloquine.png", device = "png",units = "in", dpi = 300, height = 4, width = 5)
+  }
+  
+  cell_mitox <- results(ddsMat, contrast=c("Treatment","Mitoxantrone","Control"))
+  cell_mitoxSig <- subset(cell_mitox, padj < 0.1)
+  cell_mitoxSigD <- as.data.frame(cell_mitoxSig) %>% rownames_to_column("GeneID")
+  cell_mitoxSig_A <- right_join(id_mult, cell_mitoxSigD,by =c("Name.y" = "GeneID"))
+  write.table(cell_mitoxSig_A,"DE_mitoxantrone.txt")
+  topGenes_mit <- list(mitox = head(order(cell_mitoxSig$padj),1000))
+  
+  if(nrow(cell_mitoxSig_A) != 0){
+  cell_mitoxSig_A$diffexpressed <- "NO"
+  cell_mitoxSig_A$diffexpressed[cell_mitoxSig_A$log2FoldChange > 1 & cell_mitoxSig_A$pvalue < 0.05] <-"UP"
+  cell_mitoxSig_A$diffexpressed[cell_mitoxSig_A$log2FoldChange < -1 & cell_mitoxSig_A$pvalue < 0.05] <- "DOWN"
+  cell_mitoxSig_A$delabel <- NA
+  cell_mitoxSig_A$delabel[cell_mitoxSig_A$diffexpressed != "NO"] <-        cell_mitoxSig_A$Name.x[cell_mitoxSig_A$diffexpressed != "NO"]
+  
+  mitUP <- nrow(cell_mitoxSig_A %>% filter(diffexpressed == "UP"))
+  mitDn <- nrow(cell_mitoxSig_A %>% filter(diffexpressed == "DOWN"))
+  mitDiff <- paste(samp_list[i], "mitoxantrone","UP", mitUP, "DN", mitDn)
+        print(mitDiff)
+        
+  ggplot(data=cell_mitoxSig_A, aes(x=log2FoldChange, y=-log10(pvalue), label=delabel, col=diffexpressed)) + geom_point() + theme_minimal() +   geom_text_repel() + scale_color_manual(values=c("blue", "black", "red")) + geom_vline(xintercept=c(-1, 1), col="red") +
+geom_hline(yintercept=-log10(0.05), col="red", ) + theme(text = element_text(size= 16))
+  ggsave("DE_mitoxantrone.png", device = "png",units = "in", dpi = 300, height = 4, width = 5)
+  }
+  
+  cell_pita <- results(ddsMat, contrast=c("Treatment","Pitavastatin","Control"))
+  cell_pitaSig <- subset(cell_pita, padj < 0.1)
+  cell_pitaSigD <- as.data.frame(cell_pitaSig) %>% rownames_to_column("GeneID")
+  cell_pitaSig_A <- right_join(id_mult, cell_pitaSigD,by =c("Name.y" = "GeneID"))
+  write.table(cell_pitaSig_A,"DE_pitavastatin.txt")
+  topGenes_pit <- list(pita = head(order(cell_pitaSig$padj),1000))
+  
+  if(nrow(cell_pitaSig_A) != 0){
+  cell_pitaSig_A$diffexpressed <- "NO"
+  cell_pitaSig_A$diffexpressed[cell_pitaSig_A$log2FoldChange > 1 & cell_pitaSig_A$pvalue < 0.05] <-"UP"
+  cell_pitaSig_A$diffexpressed[cell_pitaSig_A$log2FoldChange < -1 & cell_pitaSig_A$pvalue < 0.05] <- "DOWN"
+  cell_pitaSig_A$delabel <- NA
+  cell_pitaSig_A$delabel[cell_pitaSig_A$diffexpressed != "NO"] <-        cell_pitaSig_A$Name.x[cell_pitaSig_A$diffexpressed != "NO"]
+  
+  ptUP <-nrow(cell_pitaSig_A %>% filter(diffexpressed == "UP"))
+      ptDn  <- nrow(cell_pitaSig_A %>% filter(diffexpressed == "DOWN"))
+      
+      ptDif <- paste(samp_list[i], "Pitavastatin","UP", ptUP, "DN", ptDn)
+      print(ptDif)
+      
+  ggplot(data=cell_pitaSig_A, aes(x=log2FoldChange, y=-log10(pvalue), label=delabel, col=diffexpressed)) + geom_point() + theme_minimal() +   geom_text_repel() + scale_color_manual(values=c("blue", "black", "red")) + geom_vline(xintercept=c(-1, 1), col="red") +
+geom_hline(yintercept=-log10(0.05), col="red", ) + theme(text = element_text(size= 16))
+  ggsave("DE_pitavastatin.png", device = "png",units = "in", dpi = 300, height = 4, width = 5)
+  }
+  
+  cell_sert <- results(ddsMat, contrast=c("Treatment","Sertraline","Control"))
+  cell_serSig <- subset(cell_sert, padj < 0.1)
+  cell_serSigD <- as.data.frame(cell_serSig) %>% rownames_to_column("GeneID")
+  cell_serSig_A <- right_join(id_mult, cell_serSigD,by =c("Name.y" = "GeneID"))
+  write.table(cell_serSig_A,"DE_sertraline.txt")
+  topGenes_ser <- list(sert = head(order(cell_serSig$padj),1000))
+  
+  if(nrow(cell_serSig_A) != 0){
+  cell_serSig_A$diffexpressed <- "NO"
+  cell_serSig_A$diffexpressed[cell_serSig_A$log2FoldChange > 1 & cell_serSig_A$pvalue < 0.05] <-"UP"
+  cell_serSig_A$diffexpressed[cell_serSig_A$log2FoldChange < -1 & cell_serSig_A$pvalue < 0.05] <- "DOWN"
+  cell_serSig_A$delabel <- NA
+  cell_serSig_A$delabel[cell_serSig_A$diffexpressed != "NO"] <-        cell_serSig_A$Name.x[cell_serSig_A$diffexpressed != "NO"]
+  
+    stUp <- nrow(cell_serSig_A %>% filter(diffexpressed == "UP"))
+    stDn <- nrow(cell_serSig_A %>% filter(diffexpressed == "DOWN"))
+    stDiff <- paste(samp_list[i],"Sertraline", "UP", stUp, "DN", stDn)
+    print(stDiff)
+  
+  ggplot(data=cell_serSig_A, aes(x=log2FoldChange, y=-log10(pvalue), label=delabel, col=diffexpressed)) + geom_point() + theme_minimal() +   geom_text_repel() + scale_color_manual(values=c("blue", "black", "red")) + geom_vline(xintercept=c(-1, 1), col="red") +
+geom_hline(yintercept=-log10(0.05), col="red", ) + theme(text = element_text(size= 16))
+  ggsave("DE_sertraline.png", device = "png",units = "in", dpi = 300, height = 4, width = 5)
+  }
+  
+  
+  cell_simv <- results(ddsMat, contrast=c("Treatment","Simvastatin","Control"))
+  cell_simvSig <- subset(cell_simv, padj < 0.1)
+  cell_simvSigD <- as.data.frame(cell_simvSig) %>% rownames_to_column("GeneID")
+  cell_simvSig_A <- right_join(id_mult, cell_simvSigD,by =c("Name.y" = "GeneID"))
+  write.table(cell_simvSig_A,"DE_simvastatin.txt")
+  topGenes_sim <- list(simv = head(order(cell_simvSig$padj),1000))
+  
+  if(nrow(cell_simvSig_A) != 0){
+  cell_simvSig_A$diffexpressed <- "NO"
+  cell_simvSig_A$diffexpressed[cell_simvSig_A$log2FoldChange > 1 & cell_simvSig_A$pvalue < 0.05] <-"UP"
+  cell_simvSig_A$diffexpressed[cell_simvSig_A$log2FoldChange < -1 & cell_simvSig_A$pvalue < 0.05] <- "DOWN"
+  cell_simvSig_A$delabel <- NA
+  cell_simvSig_A$delabel[cell_simvSig_A$diffexpressed != "NO"] <-        cell_simvSig_A$Name.x[cell_simvSig_A$diffexpressed != "NO"]
+  
+        smUP  <- nrow(cell_simvSig_A %>% filter(diffexpressed == "UP"))
+      smDn  <- nrow(cell_simvSig_A %>% filter(diffexpressed == "DOWN"))
+  smDif <- paste(samp_list[i],"Simvastatin", "UP", smUP, "DN", smDn)
+  print(smDif)
+  
+  ggplot(data=cell_simvSig_A, aes(x=log2FoldChange, y=-log10(pvalue), label=delabel, col=diffexpressed)) + geom_point() + theme_minimal() +   geom_text_repel() + scale_color_manual(values=c("blue", "black", "red")) + geom_vline(xintercept=c(-1, 1), col="red") +
+geom_hline(yintercept=-log10(0.05), col="red", ) + theme(text = element_text(size= 16))
+  ggsave("DE_simvastatin.png", device = "png",units = "in", dpi = 300, height = 4, width = 5)
+  }
+  
+  
+  cell_tem <- results(ddsMat, contrast=c("Treatment","Temozolomide","Control"))
+  cell_temSig <- subset(cell_tem, padj < 0.1)
+  cell_temSigD <- as.data.frame(cell_temSig) %>% rownames_to_column("GeneID")
+  cell_temSig_A <- right_join(id_mult, cell_temSigD,by =c("Name.y"="GeneID"))
+  write.table(cell_temSig_A,"DE_temozolomide.txt")
+  topGenes_tem <- list(tem = head(order(cell_temSig$padj),1000))
+  
+  if(nrow(cell_temSig_A) != 0){
+  cell_temSig_A$diffexpressed <- "NO"
+  cell_temSig_A$diffexpressed[cell_temSig_A$log2FoldChange > 1 & cell_temSig_A$pvalue < 0.05] <-"UP"
+  cell_temSig_A$diffexpressed[cell_temSig_A$log2FoldChange < -1 & cell_temSig_A$pvalue < 0.05] <- "DOWN"
+  cell_temSig_A$delabel <- NA
+  cell_temSig_A$delabel[cell_temSig_A$diffexpressed != "NO"] <-        cell_temSig_A$Name.x[cell_temSig_A$diffexpressed != "NO"]
+  
+          tmUP <- nrow(cell_temSig_A %>% filter(diffexpressed == "UP"))
+        tmDn <- nrow(cell_temSig_A %>% filter(diffexpressed == "DOWN"))
+        tmDif <- paste(samp_list[i], "Temozolomide", "UP", tmUP, "DN", tmDn)
+  print(tmDif)
+  
+  ggplot(data=cell_temSig_A, aes(x=log2FoldChange, y=-log10(pvalue), label=delabel, col=diffexpressed)) + geom_point() + theme_minimal() +   geom_text_repel() + scale_color_manual(values=c("blue", "black", "red")) + geom_vline(xintercept=c(-1, 1), col="red") +
+geom_hline(yintercept=-log10(0.05), col="red", ) + theme(text = element_text(size= 16))
+  ggsave("DE_temozolomide.png", device = "png",units = "in", dpi = 300, height = 4, width = 5)
+  }
+  #gamy <- paste("top_allDrugs",samp_list[i], sep = "_")
+  top_allDrugs[[i]] <- list(tem = topGenes_tem$tem, simv = topGenes_sim$simv, sert = topGenes_ser$sert, pita = topGenes_pit$pita, mitox = topGenes_mit$mitox, mefq = topGenes_mef$mefq, disf = topGenes_dsf$disf, colc = topGenes_col$colc, bor = topGenes_bor$bor, aur = exists("topGenes_Aur$aur", inherit = F), alb = topGenes_Alb$alb)
+  #gamy <- paste("top_allDrugs",samp_list[i], sep = "_")
+  
+  #betas <- coef(ddsMat)
+  #mat <- betas[top_allDrugs, -c(1,2)]
+  #pheatmap(mat, cluster_col=FALSE)
+  #ggsave("DEgenes_allDrugs.png", device = "png",units = "in", dpi = 300, height = 8, width = 7)
+}
+
+
+```
+
+
+##Comparision across drugs within a cell line
+
+```{r}
+
+ topG_Tem_mat <- as.data.frame(top_allDrugs[[1]]$tem)
+ topG_Tem_mat$Temozolomide <- c(1)
+ colnames(topG_Tem_mat) <- c("GeneID","Temozolomide")
+ 
+ topG_sim_mat <- as.data.frame(top_allDrugs[[1]]$simv)
+ topG_sim_mat$Simvastatin <- c(1)
+ colnames(topG_sim_mat) <- c("GeneID","Simvastatin")
+ 
+ topG_ser_mat <- as.data.frame(top_allDrugs[[1]]$sert)
+ topG_ser_mat$Sertraline <- c(1)
+ colnames(topG_ser_mat) <- c("GeneID","Sertraline")
+ 
+ topG_pita_mat <- as.data.frame(top_allDrugs[[1]]$pita)
+ topG_pita_mat$Pitavastatin <- c(1)
+ colnames(topG_pita_mat) <- c("GeneID","Pitavastatin")
+ 
+ topG_mit_mat <- as.data.frame(top_allDrugs[[1]]$mitox)
+ topG_mit_mat$Mitoxantrone <- c(1)
+ colnames(topG_mit_mat) <- c("GeneID","Mitoxantrone")
+ 
+ #topG_mef_mat <- as.data.frame(topGenes_mef$mefq)
+ #topG_mef_mat$Mefloquine <- c(1)
+ #colnames(topG_mef_mat) <- c("GeneID","Mefloquine")
+ 
+ #topG_dsf_mat <- as.data.frame(topGenes_dsf$disf)
+ #topG_dsf_mat$Disulfiram <- c(1)
+ #colnames(topG_dsf_mat) <- c("GeneID","Disulfiram")
+ 
+ topG_col_mat <- as.data.frame(top_allDrugs[[1]]$colc)
+ topG_col_mat$Colchicine <- c(1)
+ colnames(topG_col_mat) <- c("GeneID","Colchicine")
+ 
+ topG_bor_mat <- as.data.frame(top_allDrugs[[1]]$bor)
+ topG_bor_mat$Bortezomib <- c(1)
+ colnames(topG_bor_mat) <- c("GeneID","Bortezomib")
+ 
+ topG_aur_mat <- as.data.frame(top_allDrugs[[1]]$aur)
+ topG_aur_mat$Auranofin <- c(1)
+ colnames(topG_aur_mat) <- c("GeneID","Auranofin")
+ 
+ topG_alb_mat <- as.data.frame(top_allDrugs[[1]]$alb)
+ topG_alb_mat$Albendazole <- c(1)
+ colnames(topG_alb_mat) <- c("GeneID","Albendazole")
+ 
+
+ topG_drugs <- full_join(topG_sim_mat, topG_Tem_mat, by = "GeneID")
+ topG_drugs <- full_join(topG_drugs, topG_ser_mat, by = "GeneID")
+ topG_drugs <- full_join(topG_drugs, topG_pita_mat, by = "GeneID")
+ topG_drugs <- full_join(topG_drugs, topG_mit_mat, by = "GeneID")
+ topG_drugs <- full_join(topG_drugs, topG_bor_mat, by = "GeneID")
+ topG_drugs <- full_join(topG_drugs, topG_aur_mat, by = "GeneID")
+ topG_drugs <- full_join(topG_drugs, topG_alb_mat, by = "GeneID")
+ topG_drugs <- full_join(topG_drugs, topG_col_mat, by = "GeneID")
+ 
+#, topG_col_mat, topG_bor_mat, topG_aur_mat, topG_alb_mat
+ #topGenes_tem$tem, topGenes_sim$simv, topGenes_ser$sert, topGenes_pit$pita, topGenes_mit$mitox, topGenes_mef$mefq, topGenes_dsf$disf, topGenes_col$colc, topGenes_bor$bor, topGenes_Aur$aur, topGenes_Alb$alb
+
+ ddsMat <- DESeqDataSetFromMatrix(countData = round(sn553_counts),
+                                  colData = meta_sn553,
+                                  design = ~ Replicate + Treatment)
+ 
+
+ ddsMat$Treatment <- relevel(ddsMat$Treatment, ref = "Control")
+  smallestGroupSize <- 2
+  keep <- rowSums(counts(ddsMat) >= 10) >= smallestGroupSize
+  ddsMat <- ddsMat[keep,]
+
+  ddsMat <- DESeq(ddsMat)
+ betas <- coef(ddsMat)
+mat <- betas[topG_drugs$GeneID, -c(1,2)]
+pheatmap(mat, cluster_rows = FALSE, annotation_row = F)
+ 
+ 
+```
+
+
+
+```{r}
+
+set.seed(123)
+#lt = list(a = sample(letters, 5),
+#          b = sample(letters, 10),
+#          c = sample(letters, 15))
+
+DE_top110_list <- list(temozolomide = topGenes_tem$tem, simvastatin = topGenes_sim$simv, sertraline = topGenes_ser$sert, pitavastatin = topGenes_pit$pita, mitoxantrone = topGenes_mit$mitox, mefloquine = topGenes_mef$mefq, Disulfiram = topGenes_dsf$disf, Colchicine = topGenes_col$colc, Bortezomib = topGenes_bor$bor, Auranofin = topGenes_Aur$aur, Albendazole = topGenes_Alb$alb)
+
+DE_top110_list_cc = make_comb_mat(DE_top110_list)
+head(DE_top110_list_cc)
+
+```
+
+
+```{r}
+#sn553
+DE_top1K_sn553list <- list(Temozolomide = top_allDrugs[[1]]$tem, Simvastatin = top_allDrugs[[1]]$simv, Sertraline = top_allDrugs[[1]]$sert, Pitavastatin = top_allDrugs[[1]]$pita, Mitoxantrone = top_allDrugs[[1]]$mitox, Mefloquine = top_allDrugs[[1]]$mefq, Disulfiram = top_allDrugs[[1]]$disf, Colchicine = top_allDrugs[[1]]$colc, Bortezomib = top_allDrugs[[1]]$bor, Auranofin = top_allDrugs[[1]]$aur, Albendazole = top_allDrugs[[1]]$alb)
+
+DE_top1K_list_SN553 = make_comb_mat(DE_top1K_sn553list, min_set_size = 5, top_n_sets = 3)
+head(DE_top1K_list_SN553)
+
+#m[comb_size(m) >= 4]
+
+UpSet(DE_top1K_list_SN553, top_annotation = upset_top_annotation(DE_top1K_list_SN553, add_numbers = TRUE))
+```
+
+
+```{r}
+
+
+  
+
+```
+
+
+
+```{r}
+#sn528
+
+DE_top1K_sn528list <- list(Temozolomide = top_allDrugs[[2]]$tem, Simvastatin = top_allDrugs[[2]]$simv, Sertraline = top_allDrugs[[2]]$sert, Pitavastatin = top_allDrugs[[2]]$pita, Mitoxantrone = top_allDrugs[[2]]$mitox, Mefloquine = top_allDrugs[[2]]$mefq, Disulfiram = top_allDrugs[[2]]$disf, Colchicine = top_allDrugs[[2]]$colc, Bortezomib = top_allDrugs[[2]]$bor, Auranofin = top_allDrugs[[2]]$aur, Albendazole = top_allDrugs[[2]]$alb)
+
+DE_top1K_list_SN528 = make_comb_mat(DE_top1K_sn528list, min_set_size = 5, top_n_sets = 3)
+head(DE_top1K_list_SN528)
+
+#m[comb_size(m) >= 4]
+
+UpSet(DE_top1K_list_SN528, top_annotation = upset_top_annotation(DE_top1K_list_SN528, add_numbers = TRUE))
+
+```
+
+
+
+```{r}
+#sn735
+
+DE_top1K_sn735list <- list(Temozolomide = top_allDrugs[[3]]$tem, Simvastatin = top_allDrugs[[3]]$simv, Sertraline = top_allDrugs[[3]]$sert, Pitavastatin = top_allDrugs[[3]]$pita, Mitoxantrone = top_allDrugs[[3]]$mitox, Mefloquine = top_allDrugs[[3]]$mefq, Disulfiram = top_allDrugs[[3]]$disf, Colchicine = top_allDrugs[[3]]$colc, Bortezomib = top_allDrugs[[3]]$bor, Auranofin = top_allDrugs[[3]]$aur, Albendazole = top_allDrugs[[3]]$alb)
+
+DE_top1K_list_SN735 = make_comb_mat(DE_top1K_sn735list, min_set_size = 5, top_n_sets = 3)
+head(DE_top1K_list_SN735)
+
+#m[comb_size(m) >= 4]
+
+UpSet(DE_top1K_list_SN735, top_annotation = upset_top_annotation(DE_top1K_list_SN735, add_numbers = TRUE))
+
+```
+
+
+
+```{r}
+
+#sn528 heatmap
+ topG_Tem_mat <- as.data.frame(top_allDrugs[[2]]$tem)
+ topG_Tem_mat$Temozolomide <- c(1)
+ colnames(topG_Tem_mat) <- c("GeneID","Temozolomide")
+ 
+ topG_sim_mat <- as.data.frame(top_allDrugs[[2]]$simv)
+ topG_sim_mat$Simvastatin <- c(1)
+ colnames(topG_sim_mat) <- c("GeneID","Simvastatin")
+ 
+ topG_ser_mat <- as.data.frame(top_allDrugs[[2]]$sert)
+ topG_ser_mat$Sertraline <- c(1)
+ colnames(topG_ser_mat) <- c("GeneID","Sertraline")
+ 
+ topG_pita_mat <- as.data.frame(top_allDrugs[[2]]$pita)
+ topG_pita_mat$Pitavastatin <- c(1)
+ colnames(topG_pita_mat) <- c("GeneID","Pitavastatin")
+ 
+ topG_mit_mat <- as.data.frame(top_allDrugs[[2]]$mitox)
+ topG_mit_mat$Mitoxantrone <- c(1)
+ colnames(topG_mit_mat) <- c("GeneID","Mitoxantrone")
+ 
+ topG_mef_mat <- as.data.frame(top_allDrugs[[2]]$mefq)
+ topG_mef_mat$Mefloquine <- c(1)
+ colnames(topG_mef_mat) <- c("GeneID","Mefloquine")
+ 
+ topG_dsf_mat <- as.data.frame(top_allDrugs[[2]]$disf)
+ topG_dsf_mat$Disulfiram <- c(1)
+ colnames(topG_dsf_mat) <- c("GeneID","Disulfiram")
+ 
+ topG_col_mat <- as.data.frame(top_allDrugs[[2]]$colc)
+ topG_col_mat$Colchicine <- c(1)
+ colnames(topG_col_mat) <- c("GeneID","Colchicine")
+ 
+ topG_bor_mat <- as.data.frame(top_allDrugs[[2]]$bor)
+ topG_bor_mat$Bortezomib <- c(1)
+ colnames(topG_bor_mat) <- c("GeneID","Bortezomib")
+ 
+ topG_aur_mat <- as.data.frame(top_allDrugs[[2]]$aur)
+ topG_aur_mat$Auranofin <- c(1)
+ colnames(topG_aur_mat) <- c("GeneID","Auranofin")
+ 
+ topG_alb_mat <- as.data.frame(top_allDrugs[[2]]$alb)
+ topG_alb_mat$Albendazole <- c(1)
+ colnames(topG_alb_mat) <- c("GeneID","Albendazole")
+ 
+
+ topG_drugs <- full_join(topG_sim_mat, topG_Tem_mat, by = "GeneID")
+ topG_drugs <- full_join(topG_drugs, topG_ser_mat, by = "GeneID")
+ topG_drugs <- full_join(topG_drugs, topG_pita_mat, by = "GeneID")
+ topG_drugs <- full_join(topG_drugs, topG_mit_mat, by = "GeneID")
+ topG_drugs <- full_join(topG_drugs, topG_bor_mat, by = "GeneID")
+ topG_drugs <- full_join(topG_drugs, topG_aur_mat, by = "GeneID")
+ topG_drugs <- full_join(topG_drugs, topG_alb_mat, by = "GeneID")
+ topG_drugs <- full_join(topG_drugs, topG_col_mat, by = "GeneID")
+ 
+#, topG_col_mat, topG_bor_mat, topG_aur_mat, topG_alb_mat
+ #topGenes_tem$tem, topGenes_sim$simv, topGenes_ser$sert, topGenes_pit$pita, topGenes_mit$mitox, topGenes_mef$mefq, topGenes_dsf$disf, topGenes_col$colc, topGenes_bor$bor, topGenes_Aur$aur, topGenes_Alb$alb
+
+ ddsMat <- DESeqDataSetFromMatrix(countData = round(sn528_counts),
+                                  colData = meta_sn528,
+                                  design = ~ Replicate + Treatment)
+ 
+
+ ddsMat$Treatment <- relevel(ddsMat$Treatment, ref = "Control")
+  smallestGroupSize <- 2
+  keep <- rowSums(counts(ddsMat) >= 10) >= smallestGroupSize
+  ddsMat <- ddsMat[keep,]
+
+  ddsMat <- DESeq(ddsMat)
+ betas <- coef(ddsMat)
+mat <- betas[topG_drugs$GeneID, -c(1,2)]
+pheatmap(mat, cluster_rows = FALSE, show_rownames =  F)
+
+
+
+
+
+```
+
+
+```{r}
+
+topG_drugs <- data.frame()
+#sn528 heatmap
+ topG_Tem_mat <- as.data.frame(top_allDrugs[[2]]$tem)
+ topG_Tem_mat$Temozolomide <- c(1)
+ colnames(topG_Tem_mat) <- c("GeneID","Temozolomide")
+ 
+ topG_sim_mat <- as.data.frame(top_allDrugs[[2]]$simv)
+ topG_sim_mat$Simvastatin <- c(1)
+ colnames(topG_sim_mat) <- c("GeneID","Simvastatin")
+ 
+ topG_ser_mat <- as.data.frame(top_allDrugs[[2]]$sert)
+ topG_ser_mat$Sertraline <- c(1)
+ colnames(topG_ser_mat) <- c("GeneID","Sertraline")
+ 
+ topG_pita_mat <- as.data.frame(top_allDrugs[[2]]$pita)
+ topG_pita_mat$Pitavastatin <- c(1)
+ colnames(topG_pita_mat) <- c("GeneID","Pitavastatin")
+ 
+ topG_mit_mat <- as.data.frame(top_allDrugs[[2]]$mitox)
+ topG_mit_mat$Mitoxantrone <- c(1)
+ colnames(topG_mit_mat) <- c("GeneID","Mitoxantrone")
+ 
+ topG_mef_mat <- as.data.frame(top_allDrugs[[2]]$mefq)
+ topG_mef_mat$Mefloquine <- c(1)
+ colnames(topG_mef_mat) <- c("GeneID","Mefloquine")
+ 
+ topG_dsf_mat <- as.data.frame(top_allDrugs[[2]]$disf)
+ topG_dsf_mat$Disulfiram <- c(1)
+ colnames(topG_dsf_mat) <- c("GeneID","Disulfiram")
+ 
+ topG_col_mat <- as.data.frame(top_allDrugs[[2]]$colc)
+ topG_col_mat$Colchicine <- c(1)
+ colnames(topG_col_mat) <- c("GeneID","Colchicine")
+ 
+ topG_bor_mat <- as.data.frame(top_allDrugs[[2]]$bor)
+ topG_bor_mat$Bortezomib <- c(1)
+ colnames(topG_bor_mat) <- c("GeneID","Bortezomib")
+ 
+ topG_aur_mat <- as.data.frame(top_allDrugs[[2]]$aur)
+ topG_aur_mat$Auranofin <- c(1)
+ colnames(topG_aur_mat) <- c("GeneID","Auranofin")
+ 
+ topG_alb_mat <- as.data.frame(top_allDrugs[[2]]$alb)
+ topG_alb_mat$Albendazole <- c(1)
+ colnames(topG_alb_mat) <- c("GeneID","Albendazole")
+ 
+
+ topG_drugs <- full_join(topG_sim_mat, topG_Tem_mat, by = "GeneID")
+ topG_drugs <- full_join(topG_drugs, topG_ser_mat, by = "GeneID")
+ topG_drugs <- full_join(topG_drugs, topG_pita_mat, by = "GeneID")
+ topG_drugs <- full_join(topG_drugs, topG_mit_mat, by = "GeneID")
+ topG_drugs <- full_join(topG_drugs, topG_bor_mat, by = "GeneID")
+ topG_drugs <- full_join(topG_drugs, topG_aur_mat, by = "GeneID")
+ topG_drugs <- full_join(topG_drugs, topG_alb_mat, by = "GeneID")
+ topG_drugs <- full_join(topG_drugs, topG_col_mat, by = "GeneID")
+ topG_drugs <- full_join(topG_drugs, topG_dsf_mat, by = "GeneID")
+ topG_drugs <- full_join(topG_drugs, topG_mef_mat, by = "GeneID")
+ 
+ 
+ 
+ 
+#, topG_col_mat, topG_bor_mat, topG_aur_mat, topG_alb_mat
+ #topGenes_tem$tem, topGenes_sim$simv, topGenes_ser$sert, topGenes_pit$pita, topGenes_mit$mitox, topGenes_mef$mefq, topGenes_dsf$disf, topGenes_col$colc, topGenes_bor$bor, topGenes_Aur$aur, topGenes_Alb$alb
+
+ ddsMat <- DESeqDataSetFromMatrix(countData = round(sn528_counts),
+                                  colData = meta_sn528,
+                                  design = ~ Replicate + Treatment)
+ 
+
+ ddsMat$Treatment <- relevel(ddsMat$Treatment, ref = "Control")
+  smallestGroupSize <- 2
+  keep <- rowSums(counts(ddsMat) >= 10) >= smallestGroupSize
+  ddsMat <- ddsMat[keep,]
+
+  ddsMat <- DESeq(ddsMat)
+ betas <- coef(ddsMat)
+mat <- betas[topG_drugs$GeneID, -c(1,2)]
+pheatmap(mat, cluster_rows = FALSE, show_rownames =  F)
+
+
+
+```
+
+
+```{r}
+
+topG_drugs <- data.frame()
+#sn735 heatmap
+ topG_Tem_mat <- as.data.frame(top_allDrugs[[3]]$tem)
+ topG_Tem_mat$Temozolomide <- c(1)
+ colnames(topG_Tem_mat) <- c("GeneID","Temozolomide")
+ 
+ topG_sim_mat <- as.data.frame(top_allDrugs[[3]]$simv)
+ topG_sim_mat$Simvastatin <- c(1)
+ colnames(topG_sim_mat) <- c("GeneID","Simvastatin")
+ 
+ #topG_ser_mat <- as.data.frame(top_allDrugs[[3]]$sert)
+ #topG_ser_mat$Sertraline <- c(1)
+ #colnames(topG_ser_mat) <- c("GeneID","Sertraline")
+ 
+ topG_pita_mat <- as.data.frame(top_allDrugs[[3]]$pita)
+ topG_pita_mat$Pitavastatin <- c(1)
+ colnames(topG_pita_mat) <- c("GeneID","Pitavastatin")
+ 
+ #topG_mit_mat <- as.data.frame(top_allDrugs[[3]]$mitox)
+ #topG_mit_mat$Mitoxantrone <- c(1)
+ #colnames(topG_mit_mat) <- c("GeneID","Mitoxantrone")
+ 
+ topG_mef_mat <- as.data.frame(top_allDrugs[[3]]$mefq)
+ topG_mef_mat$Mefloquine <- c(1)
+ colnames(topG_mef_mat) <- c("GeneID","Mefloquine")
+ 
+ topG_dsf_mat <- as.data.frame(top_allDrugs[[3]]$disf)
+ topG_dsf_mat$Disulfiram <- c(1)
+ colnames(topG_dsf_mat) <- c("GeneID","Disulfiram")
+ 
+ topG_col_mat <- as.data.frame(top_allDrugs[[3]]$colc)
+ topG_col_mat$Colchicine <- c(1)
+ colnames(topG_col_mat) <- c("GeneID","Colchicine")
+ 
+ topG_bor_mat <- as.data.frame(top_allDrugs[[3]]$bor)
+ topG_bor_mat$Bortezomib <- c(1)
+ colnames(topG_bor_mat) <- c("GeneID","Bortezomib")
+ 
+ topG_aur_mat <- as.data.frame(top_allDrugs[[3]]$aur)
+ topG_aur_mat$Auranofin <- c(1)
+ colnames(topG_aur_mat) <- c("GeneID","Auranofin")
+ 
+ topG_alb_mat <- as.data.frame(top_allDrugs[[3]]$alb)
+ topG_alb_mat$Albendazole <- c(1)
+ colnames(topG_alb_mat) <- c("GeneID","Albendazole")
+ 
+
+ topG_drugs <- full_join(topG_sim_mat, topG_Tem_mat, by = "GeneID")
+ #topG_drugs <- full_join(topG_drugs, topG_ser_mat, by = "GeneID")
+ topG_drugs <- full_join(topG_drugs, topG_pita_mat, by = "GeneID")
+ #topG_drugs <- full_join(topG_drugs, topG_mit_mat, by = "GeneID")
+ topG_drugs <- full_join(topG_drugs, topG_bor_mat, by = "GeneID")
+ topG_drugs <- full_join(topG_drugs, topG_aur_mat, by = "GeneID")
+ topG_drugs <- full_join(topG_drugs, topG_alb_mat, by = "GeneID")
+ topG_drugs <- full_join(topG_drugs, topG_col_mat, by = "GeneID")
+ topG_drugs <- full_join(topG_drugs, topG_dsf_mat, by = "GeneID")
+ topG_drugs <- full_join(topG_drugs, topG_mef_mat, by = "GeneID")
+ 
+ 
+ 
+ 
+#, topG_col_mat, topG_bor_mat, topG_aur_mat, topG_alb_mat
+ #topGenes_tem$tem, topGenes_sim$simv, topGenes_ser$sert, topGenes_pit$pita, topGenes_mit$mitox, topGenes_mef$mefq, topGenes_dsf$disf, topGenes_col$colc, topGenes_bor$bor, topGenes_Aur$aur, topGenes_Alb$alb
+
+ ddsMat <- DESeqDataSetFromMatrix(countData = round(sn735_counts),
+                                  colData = meta_sn735,
+                                  design = ~ Replicate + Treatment)
+ 
+
+ ddsMat$Treatment <- relevel(ddsMat$Treatment, ref = "Control")
+  smallestGroupSize <- 2
+  keep <- rowSums(counts(ddsMat) >= 10) >= smallestGroupSize
+  ddsMat <- ddsMat[keep,]
+
+  ddsMat <- DESeq(ddsMat)
+ betas <- coef(ddsMat)
+mat <- betas[topG_drugs$GeneID, -c(1,2)]
+pheatmap(mat, cluster_rows = FALSE, show_rownames =  F)
+
+
+
+
+```
+
+
+##Comparision across cell lines considering each drug (1)
+
+```{r}
+
+
+DE_top1K_temo <- list(sn553_T = top_allDrugs[[1]]$tem, sn528_T = top_allDrugs[[2]]$tem, sn735_T = top_allDrugs[[3]]$tem)
+
+DE_top1K_list_tmz = make_comb_mat(DE_top1K_temo, min_set_size = 5, top_n_sets = 3)
+head(DE_top1K_list_tmz)
+
+#m[comb_size(m) >= 4]
+pnam <- paste("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/","CellLinesUpset_TMZ.pdf", sep = "_")
+
+pdf(file = pnam,   
+    width = 7, 
+    height = 5) 
+UpSet(DE_top1K_list_tmz, top_annotation = upset_top_annotation(DE_top1K_list_tmz, add_numbers = TRUE))
+
+dev.off()
+
+
+
+DE_top1K_Simv <- list(sn553_S = top_allDrugs[[1]]$simv, sn528_S = top_allDrugs[[2]]$simv, sn735_S = top_allDrugs[[3]]$simv)
+
+DE_top1K_list_Simv = make_comb_mat(DE_top1K_Simv, min_set_size = 5, top_n_sets = 3)
+#head(DE_top1K_list_Simv)
+
+#m[comb_size(m) >= 4]
+pnam <- paste("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/","CellLinesUpset_SMV.pdf", sep = "_")
+
+pdf(file = pnam,   
+    width = 7, 
+    height = 5) 
+UpSet(DE_top1K_list_Simv, top_annotation = upset_top_annotation(DE_top1K_list_Simv, add_numbers = TRUE))
+
+dev.off()
+
+
+DE_top1K_srt <- list(sn553_st = top_allDrugs[[1]]$sert, sn528_st = top_allDrugs[[2]]$sert, sn735_st = top_allDrugs[[3]]$sert)
+
+DE_top1K_list_srt = make_comb_mat(DE_top1K_srt, min_set_size = 5, top_n_sets = 3)
+#head(DE_top1K_list_tmz)
+
+#m[comb_size(m) >= 4]
+pnam <- paste("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/","CellLinesUpset_SRT.pdf", sep = "_")
+
+pdf(file = pnam,   
+    width = 7, 
+    height = 5) 
+UpSet(DE_top1K_list_srt, top_annotation = upset_top_annotation(DE_top1K_list_srt, add_numbers = TRUE))
+
+dev.off()
+
+#Simvastatin = top_allDrugs[[3]]$simv, Sertraline = top_allDrugs[[3]]$sert, Pitavastatin = top_allDrugs[[3]]$pita, 
+
+DE_top1K_pstat <- list(sn553_p = top_allDrugs[[1]]$pita, sn528_p = top_allDrugs[[2]]$pita, sn735_p = top_allDrugs[[3]]$pita)
+
+DE_top1K_list_pstat = make_comb_mat(DE_top1K_pstat, min_set_size = 5, top_n_sets = 3)
+#head(DE_top1K_list_tmz)
+
+#m[comb_size(m) >= 4]
+pnam <- paste("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/","CellLinesUpset_PSTAT.pdf", sep = "_")
+
+pdf(file = pnam,   
+    width = 7, 
+    height = 5) 
+UpSet(DE_top1K_list_pstat, top_annotation = upset_top_annotation(DE_top1K_list_pstat, add_numbers = TRUE))
+
+dev.off()
+
+
+
+
+
+DE_top1K_mito <- list(sn553_mt = top_allDrugs[[1]]$mitox, sn528_mt = top_allDrugs[[2]]$mitox, sn735_mt = top_allDrugs[[3]]$mitox)
+
+DE_top1K_list_mito = make_comb_mat(DE_top1K_mito, min_set_size = 5, top_n_sets = 3)
+#head(DE_top1K_list_tmz)
+
+#m[comb_size(m) >= 4]
+pnam <- paste("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/","CellLinesUpset_MITO.pdf", sep = "_")
+
+pdf(file = pnam,   
+    width = 7, 
+    height = 5) 
+UpSet(DE_top1K_list_mito, top_annotation = upset_top_annotation(DE_top1K_list_mito, add_numbers = TRUE))
+
+dev.off()
+
+#Mitoxantrone = top_allDrugs[[3]]$mitox, Mefloquine = top_allDrugs[[3]]$mefq, Disulfiram = top_allDrugs[[3]]$disf, Colchicine = top_allDrugs[[3]]$colc, Bortezomib = top_allDrugs[[3]]$bor, Auranofin = top_allDrugs[[3]]$aur, Albendazole = top_allDrugs[[3]]$alb
+
+DE_top1K_mef <- list(sn553_mf = top_allDrugs[[1]]$mefq, sn528_mf = top_allDrugs[[2]]$mefq, sn735_mf = top_allDrugs[[3]]$mefq)
+
+DE_top1K_list_mef = make_comb_mat(DE_top1K_mef, min_set_size = 5, top_n_sets = 3)
+#head(DE_top1K_list_tmz)
+
+#m[comb_size(m) >= 4]
+pnam <- paste("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/","CellLinesUpset_MEF.pdf", sep = "_")
+
+pdf(file = pnam,   
+    width = 7, 
+    height = 5) 
+UpSet(DE_top1K_list_mef, top_annotation = upset_top_annotation(DE_top1K_list_mef, add_numbers = TRUE))
+
+dev.off()
+
+DE_top1K_dsf <- list(sn553_ds = top_allDrugs[[1]]$disf, sn528_ds = top_allDrugs[[2]]$disf, sn735_ds = top_allDrugs[[3]]$disf)
+
+DE_top1K_list_dsf = make_comb_mat(DE_top1K_dsf, min_set_size = 5, top_n_sets = 3)
+#head(DE_top1K_list_tmz)
+
+#m[comb_size(m) >= 4]
+pnam <- paste("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/","CellLinesUpset_DSF.pdf", sep = "_")
+
+pdf(file = pnam,   
+    width = 7, 
+    height = 5) 
+UpSet(DE_top1K_list_dsf, top_annotation = upset_top_annotation(DE_top1K_list_dsf, add_numbers = TRUE))
+
+dev.off()
+
+DE_top1K_col <- list(sn553_col = top_allDrugs[[1]]$colc, sn528_col = top_allDrugs[[2]]$colc, sn735_col = top_allDrugs[[3]]$colc)
+
+DE_top1K_list_col = make_comb_mat(DE_top1K_col, min_set_size = 5, top_n_sets = 3)
+#head(DE_top1K_list_tmz)
+
+#m[comb_size(m) >= 4]
+pnam <- paste("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/","CellLinesUpset_COL.pdf", sep = "_")
+
+pdf(file = pnam,   
+    width = 7, 
+    height = 5) 
+UpSet(DE_top1K_list_col, top_annotation = upset_top_annotation(DE_top1K_list_col, add_numbers = TRUE))
+
+dev.off()
+
+DE_top1K_bort <- list(sn553_br = top_allDrugs[[1]]$bor, sn528_br = top_allDrugs[[2]]$bor, sn735_br = top_allDrugs[[3]]$bor)
+
+DE_top1K_list_bort = make_comb_mat(DE_top1K_bort, min_set_size = 5, top_n_sets = 3)
+#head(DE_top1K_list_tmz)
+
+#m[comb_size(m) >= 4]
+pnam <- paste("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/","CellLinesUpset_BORT.pdf", sep = "_")
+
+pdf(file = pnam,   
+    width = 7, 
+    height = 5) 
+UpSet(DE_top1K_list_bort, top_annotation = upset_top_annotation(DE_top1K_list_bort, add_numbers = TRUE))
+
+dev.off()
+
+
+DE_top1K_aur <- list(sn553_ar = top_allDrugs[[1]]$aur, sn528_ar = top_allDrugs[[2]]$aur, sn735_ar = top_allDrugs[[3]]$aur)
+
+DE_top1K_list_aur = make_comb_mat(DE_top1K_aur, min_set_size = 5, top_n_sets = 3)
+#head(DE_top1K_list_tmz)
+
+#m[comb_size(m) >= 4]
+pnam <- paste("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/","CellLinesUpset_AUR.pdf", sep = "_")
+
+pdf(file = pnam,   
+    width = 7, 
+    height = 5) 
+UpSet(DE_top1K_list_aur, top_annotation = upset_top_annotation(DE_top1K_list_aur, add_numbers = TRUE))
+
+dev.off()
+
+
+DE_top1K_alb <- list(sn553_alb = top_allDrugs[[1]]$alb, sn528_alb = top_allDrugs[[2]]$alb, sn735_alb = top_allDrugs[[3]]$alb)
+
+DE_top1K_list_alb = make_comb_mat(DE_top1K_alb, min_set_size = 5, top_n_sets = 3)
+#head(DE_top1K_list_tmz)
+
+#m[comb_size(m) >= 4]
+pnam <- paste("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/","CellLinesUpset_ALB.pdf", sep = "_")
+
+pdf(file = pnam,   
+    width = 7, 
+    height = 5) 
+UpSet(DE_top1K_list_alb, top_annotation = upset_top_annotation(DE_top1K_list_alb, add_numbers = TRUE))
+
+dev.off()
+
+
+```
+

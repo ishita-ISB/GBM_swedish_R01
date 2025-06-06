@@ -1,0 +1,1412 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+DE genes compare across cell lines and across drugs
+Drugs list: 
+Bortezomib, Mitoxantrone
+Auranofin, Colchicine
+Pitavastatin, Simvastatin
+Albendazole?
+
+Cell lines
+SN503, SN505, SN508, SN520, SN533, SN575, SN579, SN674, SN677, SN753, SN756, SN810
+
+```{r}
+#1
+sn503_bort <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN503/DE_bortezomib.txt")
+
+sn503_DE_bort<- sn503_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#2
+
+sn505_bort <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN505/DE_bortezomib.txt")
+
+sn505_DE_bort<- sn505_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#3
+
+sn508_bort <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN508/DE_bortezomib.txt")
+
+sn508_DE_bort<- sn508_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#4
+
+sn520_bort <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN520/DE_bortezomib.txt")
+
+sn520_DE_bort<- sn520_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#5
+sn533_bort <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN533/DE_bortezomib.txt")
+
+sn533_DE_bort<- sn533_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#6
+
+sn575_bort <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN575/DE_bortezomib.txt")
+
+sn575_DE_bort<- sn575_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#7
+sn579_bort <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN579/DE_bortezomib.txt")
+
+sn579_DE_bort<- sn579_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#8
+sn674_bort <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN674/DE_bortezomib.txt")
+
+sn674_DE_bort<- sn674_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+
+#9
+
+sn677_bort <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN677/DE_bortezomib.txt")
+
+sn677_DE_bort<- sn677_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#10
+sn753_bort <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN753/DE_bortezomib.txt")
+
+sn753_DE_bort<- sn753_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#11
+
+sn756_bort <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN756/DE_bortezomib.txt")
+
+sn756_DE_bort<- sn756_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+
+#12
+
+sn810_bort <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN810/DE_bortezomib.txt")
+
+sn810_DE_bort<- sn810_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#13
+
+sn517_bort <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN517/DE_bortezomib.txt")
+
+sn517_DE_bort<- sn517_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#14
+
+
+sn521_bort <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN521/DE_bortezomib.txt")
+
+sn521_DE_bort<- sn521_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#15
+
+sn528_bort <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN528/DE_bortezomib.txt")
+
+sn528_DE_bort<- sn528_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#16
+
+sn529_bort <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN529/DE_bortezomib.txt")
+
+sn529_DE_bort<- sn529_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#17
+
+
+sn534_bort <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN534/DE_bortezomib.txt")
+
+sn534_DE_bort<- sn534_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#18
+
+
+sn553_bort <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN553/DE_bortezomib.txt")
+
+sn553_DE_bort<- sn553_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#19
+
+sn649_bort <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN649/DE_bortezomib.txt", header = T)
+
+sn649_DE_bort<- sn649_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#20
+
+
+sn667_bort <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN667/DE_bortezomib.txt")
+
+sn667_DE_bort<- sn667_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#21
+
+sn735_bort <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN735/DE_bortezomib.txt")
+
+sn735_DE_bort<- sn735_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#22
+
+sn747_bort <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN747/DE_bortezomib.txt")
+
+sn747_DE_bort<- sn747_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#23
+
+sn767_bort <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN767/DE_bortezomib.txt")
+
+sn767_DE_bort<- sn767_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+
+```
+
+
+```{r}
+#atleast 2000 DE genes
+#SN503, SN505, SN508, SN520, SN533, SN575, SN579, SN674, SN677, SN753, SN756, SN810
+DE_sel12_bort <- list( sn503 = sn503_DE_bort$ENSEMBL, sn505 = sn505_DE_bort$ENSEMBL,
+sn508 = sn508_DE_bort$ENSEMBL, 
+sn520 = sn520_DE_bort$ENSEMBL,
+sn533 = sn533_DE_bort$ENSEMBL, 
+sn575 = sn575_DE_bort$ENSEMBL, 
+sn579 = sn579_DE_bort$ENSEMBL, 
+sn674 = sn674_DE_bort$ENSEMBL, 
+sn677 = sn677_DE_bort$ENSEMBL, 
+sn753 = sn753_DE_bort$ENSEMBL, 
+sn756 = sn756_DE_bort$ENSEMBL, 
+sn810 = sn810_DE_bort$ENSEMBL,
+sn517 = sn517_DE_bort$ENSEMBL,
+sn521 = sn521_DE_bort$ENSEMBL,
+sn528 = sn528_DE_bort$ENSEMBL,
+sn529 = sn529_DE_bort$ENSEMBL,
+sn534 = sn534_DE_bort$ENSEMBL,
+sn553 = sn553_DE_bort$ENSEMBL,
+sn649 = sn649_DE_bort$ENSEMBL,
+sn667 = sn667_DE_bort$ENSEMBL,
+sn735 = sn735_DE_bort$ENSEMBL,
+sn747 = sn747_DE_bort$ENSEMBL,
+sn767 = sn767_DE_bort$ENSEMBL)
+
+DE_sel_bortComb = make_comb_mat(DE_sel12_bort, min_set_size = 50, top_n_sets = 50)
+DE_sel_bortCom_filt <- DE_sel_bortComb[comb_size(DE_sel_bortComb) >= 50]
+
+UpSet(DE_sel_bortCom_filt, top_annotation = upset_top_annotation(DE_sel_bortCom_filt, add_numbers = TRUE))
+
+UpSet(DE_sel_bortCom_filt, top_annotation = upset_top_annotation(DE_sel_bortCom_filt, add_numbers = TRUE, axis_param = list(gp = gpar(fontsize = 18))), comb_order = order(comb_size(DE_sel_bortCom_filt)), row_names_gp = gpar(fontsize = 20))
+
+
+#emt_cellL_bort_comB_deG <- rbind(sn521_bort2, sn810_bort2, sn533_bort2, sn553_bort2, sn528_bort2, sn747_bort2, sn753_bort2, sn503_bort2, sn517_bort2, sn575_bort2)
+
+```
+
+
+
+
+```{r}
+
+#1
+sn503_mitx <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN503/DE_mitoxantrone.txt")
+
+sn503_DE_mitx <- sn503_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#2
+
+sn505_mitx <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN505/DE_mitoxantrone.txt")
+
+sn505_DE_mitx <- sn505_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#3
+
+sn508_mitx <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN508/DE_mitoxantrone.txt")
+
+sn508_DE_mitx <- sn508_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#4
+
+sn520_mitx <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN520/DE_mitoxantrone.txt")
+
+sn520_DE_mitx <- sn520_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#5
+sn533_mitx <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN533/DE_mitoxantrone.txt")
+
+sn533_DE_mitx <- sn533_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#6
+
+sn575_mitx <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN575/DE_mitoxantrone.txt")
+
+sn575_DE_mitx <- sn575_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#7
+sn579_mitx <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN579/DE_mitoxantrone.txt")
+
+sn579_DE_mitx <- sn579_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#8
+sn674_mitx <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN674/DE_mitoxantrone.txt")
+
+sn674_DE_mitx <- sn674_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+
+#9
+
+sn677_mitx <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN677/DE_mitoxantrone.txt")
+
+sn677_DE_mitx <- sn677_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#10
+sn753_mitx <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN753/DE_mitoxantrone.txt")
+
+sn753_DE_mitx <- sn753_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#11
+
+sn756_mitx <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN756/DE_mitoxantrone.txt")
+
+sn756_DE_mitx <- sn756_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+
+#12
+
+sn810_mitx <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN810/DE_mitoxantrone.txt")
+
+sn810_DE_mitx <- sn810_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#13
+
+sn517_mitx <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN517/DE_mitoxantrone.txt")
+
+sn517_DE_mitx <- sn517_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#14
+
+
+sn521_mitx <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN521/DE_mitoxantrone.txt")
+
+sn521_DE_mitx <- sn521_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#15
+
+sn528_mitx <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN528/DE_mitoxantrone.txt")
+
+sn528_DE_mitx <- sn528_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#16
+
+sn529_mitx <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN529/DE_mitoxantrone.txt")
+
+sn529_DE_mitx <- sn529_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#17
+
+
+sn534_mitx <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN534/DE_mitoxantrone.txt")
+
+sn534_DE_mitx <- sn534_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#18
+
+
+sn553_mitx <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN553/DE_mitoxantrone.txt")
+
+sn553_DE_mitx <- sn553_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#19
+
+sn649_mitx <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN649/DE_mitoxantrone.txt", header = T)
+
+sn649_DE_mitx <- sn649_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#20
+
+
+sn667_mitx <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN667/DE_mitoxantrone.txt")
+
+sn667_DE_mitx <- sn667_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#21
+
+sn735_mitx <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN735/DE_mitoxantrone.txt")
+
+sn735_DE_mitx <- sn735_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#22
+
+sn747_mitx <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN747/DE_mitoxantrone.txt")
+
+sn747_DE_mitx <- sn747_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#23
+
+sn767_mitx <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN767/DE_mitoxantrone.txt")
+
+sn767_DE_mitx <- sn767_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+
+
+
+
+```
+
+
+```{r}
+
+DE_sel12_mitx <- list( sn503 = sn503_DE_mitx$ENSEMBL, sn505 = sn505_DE_mitx$ENSEMBL,
+sn508 = sn508_DE_mitx$ENSEMBL, 
+sn520 = sn520_DE_mitx$ENSEMBL,
+sn533 = sn533_DE_mitx$ENSEMBL, 
+sn575 = sn575_DE_mitx$ENSEMBL, 
+sn579 = sn579_DE_mitx$ENSEMBL, 
+sn674 = sn674_DE_mitx$ENSEMBL, 
+sn677 = sn677_DE_mitx$ENSEMBL, 
+sn753 = sn753_DE_mitx$ENSEMBL, 
+sn756 = sn756_DE_mitx$ENSEMBL, 
+sn810 = sn810_DE_mitx$ENSEMBL,
+sn517 = sn517_DE_mitx$ENSEMBL,
+sn521 = sn521_DE_mitx$ENSEMBL,
+sn528 = sn528_DE_mitx$ENSEMBL,
+sn529 = sn529_DE_mitx$ENSEMBL,
+sn534 = sn534_DE_mitx$ENSEMBL,
+sn553 = sn553_DE_mitx$ENSEMBL,
+sn649 = sn649_DE_mitx$ENSEMBL,
+sn667 = sn667_DE_mitx$ENSEMBL,
+sn735 = sn735_DE_mitx$ENSEMBL,
+sn747 = sn747_DE_mitx$ENSEMBL,
+sn767 = sn767_DE_mitx$ENSEMBL)
+
+DE_sel_mitxComb = make_comb_mat(DE_sel12_mitx, min_set_size = 50, top_n_sets = 50)
+DE_sel_mitxCom_filt <- DE_sel_mitxComb[comb_size(DE_sel_mitxComb) >= 50]
+
+UpSet(DE_sel_mitxCom_filt, top_annotation = upset_top_annotation(DE_sel_mitxCom_filt, add_numbers = TRUE))
+
+UpSet(DE_sel_mitxCom_filt, top_annotation = upset_top_annotation(DE_sel_mitxCom_filt, add_numbers = TRUE, axis_param = list(gp = gpar(fontsize = 18))), comb_order = order(comb_size(DE_sel_mitxCom_filt)), row_names_gp = gpar(fontsize = 20))
+
+
+
+
+```
+
+
+
+
+```{r}
+
+
+#1
+sn503_arf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN503/DE_auranofin.txt")
+
+sn503_DE_arf <- sn503_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#2
+
+sn505_arf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN505/DE_auranofin.txt")
+
+sn505_DE_arf <- sn505_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#3
+
+sn508_arf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN508/DE_auranofin.txt")
+
+sn508_DE_arf <- sn508_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#4
+
+sn520_arf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN520/DE_auranofin.txt")
+
+sn520_DE_arf <- sn520_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#5
+sn533_arf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN533/DE_auranofin.txt")
+
+sn533_DE_arf <- sn533_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#6
+
+sn575_arf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN575/DE_auranofin.txt")
+
+sn575_DE_arf <- sn575_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#7
+sn579_arf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN579/DE_auranofin.txt")
+
+sn579_DE_arf <- sn579_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#8
+sn674_arf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN674/DE_auranofin.txt")
+
+sn674_DE_arf <- sn674_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+
+#9
+
+sn677_arf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN677/DE_auranofin.txt")
+
+sn677_DE_arf <- sn677_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#10
+sn753_arf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN753/DE_auranofin.txt")
+
+sn753_DE_arf <- sn753_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#11
+
+sn756_arf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN756/DE_auranofin.txt")
+
+sn756_DE_arf <- sn756_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+
+#12
+
+sn810_arf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN810/DE_auranofin.txt")
+
+sn810_DE_arf <- sn810_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#13
+
+sn517_arf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN517/DE_auranofin.txt")
+
+sn517_DE_arf <- sn517_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#14
+
+
+sn521_arf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN521/DE_auranofin.txt")
+
+sn521_DE_arf <- sn521_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#15
+
+sn528_arf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN528/DE_auranofin.txt")
+
+sn528_DE_arf <- sn528_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#16
+
+sn529_arf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN529/DE_auranofin.txt")
+
+sn529_DE_arf <- sn529_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#17
+
+
+sn534_arf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN534/DE_auranofin.txt")
+
+sn534_DE_arf <- sn534_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#18
+
+
+sn553_arf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN553/DE_auranofin.txt")
+
+sn553_DE_arf <- sn553_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#19
+
+sn649_arf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN649/DE_auranofin.txt", header = T)
+
+sn649_DE_arf <- sn649_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#20
+
+
+sn667_arf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN667/DE_auranofin.txt")
+
+sn667_DE_arf <- sn667_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#21
+
+sn735_arf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN735/DE_auranofin.txt")
+
+sn735_DE_arf <- sn735_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#22
+
+sn747_arf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN747/DE_auranofin.txt")
+
+sn747_DE_arf <- sn747_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#23
+
+sn767_arf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN767/DE_auranofin.txt")
+
+sn767_DE_arf <- sn767_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+
+
+
+
+```
+
+
+```{r}
+
+DE_sel12_arf <- list( sn503 = sn503_DE_arf$ENSEMBL, sn505 = sn505_DE_arf$ENSEMBL,
+sn508 = sn508_DE_arf$ENSEMBL, 
+sn520 = sn520_DE_arf$ENSEMBL,
+sn533 = sn533_DE_arf$ENSEMBL, 
+sn575 = sn575_DE_arf$ENSEMBL, 
+sn579 = sn579_DE_arf$ENSEMBL, 
+sn674 = sn674_DE_arf$ENSEMBL, 
+sn677 = sn677_DE_arf$ENSEMBL, 
+sn753 = sn753_DE_arf$ENSEMBL, 
+sn756 = sn756_DE_arf$ENSEMBL, 
+sn810 = sn810_DE_arf$ENSEMBL,
+sn517 = sn517_DE_arf$ENSEMBL,
+sn521 = sn521_DE_arf$ENSEMBL,
+sn528 = sn528_DE_arf$ENSEMBL,
+sn529 = sn529_DE_arf$ENSEMBL,
+sn534 = sn534_DE_arf$ENSEMBL,
+sn553 = sn553_DE_arf$ENSEMBL,
+sn649 = sn649_DE_arf$ENSEMBL,
+sn667 = sn667_DE_arf$ENSEMBL,
+sn735 = sn735_DE_arf$ENSEMBL,
+sn747 = sn747_DE_arf$ENSEMBL,
+sn767 = sn767_DE_arf$ENSEMBL)
+
+DE_sel_arfComb = make_comb_mat(DE_sel12_arf, min_set_size = 50, top_n_sets = 50)
+DE_sel_arfCom_filt <- DE_sel_arfComb[comb_size(DE_sel_arfComb) >= 50]
+
+UpSet(DE_sel_arfCom_filt, top_annotation = upset_top_annotation(DE_sel_arfCom_filt, add_numbers = TRUE))
+
+UpSet(DE_sel_arfCom_filt, top_annotation = upset_top_annotation(DE_sel_arfCom_filt, add_numbers = TRUE, axis_param = list(gp = gpar(fontsize = 18))), comb_order = order(comb_size(DE_sel_arfCom_filt)), row_names_gp = gpar(fontsize = 20))
+
+
+
+
+```
+
+
+
+```{r}
+
+
+#1
+sn503_sim <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN503/DE_simvastatin.txt")
+
+sn503_DE_sim <- sn503_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#2
+
+sn505_sim <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN505/DE_simvastatin.txt")
+
+sn505_DE_sim <- sn505_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#3
+
+sn508_sim <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN508/DE_simvastatin.txt")
+
+sn508_DE_sim <- sn508_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#4
+
+sn520_sim <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN520/DE_simvastatin.txt")
+
+sn520_DE_sim <- sn520_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#5
+sn533_sim <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN533/DE_simvastatin.txt")
+
+sn533_DE_sim <- sn533_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#6
+
+sn575_sim <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN575/DE_simvastatin.txt")
+
+sn575_DE_sim <- sn575_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#7
+sn579_sim <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN579/DE_simvastatin.txt")
+
+sn579_DE_sim <- sn579_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#8
+sn674_sim <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN674/DE_simvastatin.txt")
+
+sn674_DE_sim <- sn674_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+
+#9
+
+sn677_sim <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN677/DE_simvastatin.txt")
+
+sn677_DE_sim <- sn677_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#10
+sn753_sim <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN753/DE_simvastatin.txt")
+
+sn753_DE_sim <- sn753_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#11
+
+sn756_sim <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN756/DE_simvastatin.txt")
+
+sn756_DE_sim <- sn756_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+
+#12
+
+sn810_sim <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN810/DE_simvastatin.txt")
+
+sn810_DE_sim <- sn810_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#13
+
+sn517_sim <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN517/DE_simvastatin.txt")
+
+sn517_DE_sim <- sn517_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#14
+
+
+sn521_sim <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN521/DE_simvastatin.txt")
+
+sn521_DE_sim <- sn521_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#15
+
+sn528_sim <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN528/DE_simvastatin.txt")
+
+sn528_DE_sim <- sn528_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#16
+
+sn529_sim <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN529/DE_simvastatin.txt")
+
+sn529_DE_sim <- sn529_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#17
+
+
+sn534_sim <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN534/DE_simvastatin.txt", header = T)
+
+sn534_DE_sim <- sn534_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#18
+
+
+sn553_sim <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN553/DE_simvastatin.txt")
+
+sn553_DE_sim <- sn553_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#19
+
+sn649_sim <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN649/DE_simvastatin.txt", header = T)
+
+sn649_DE_sim <- sn649_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#20
+
+
+sn667_sim <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN667/DE_simvastatin.txt")
+
+sn667_DE_sim <- sn667_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#21
+
+sn735_sim <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN735/DE_simvastatin.txt")
+
+sn735_DE_sim <- sn735_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#22
+
+sn747_sim <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN747/DE_simvastatin.txt")
+
+sn747_DE_sim <- sn747_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#23
+
+sn767_sim <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN767/DE_simvastatin.txt")
+
+sn767_DE_sim <- sn767_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+
+
+
+```
+
+
+
+```{r}
+
+DE_sel12_sim <- list( sn503 = sn503_DE_sim$ENSEMBL, sn505 = sn505_DE_sim$ENSEMBL,
+sn508 = sn508_DE_sim$ENSEMBL, 
+sn520 = sn520_DE_sim$ENSEMBL,
+sn533 = sn533_DE_sim$ENSEMBL, 
+sn575 = sn575_DE_sim$ENSEMBL, 
+sn579 = sn579_DE_sim$ENSEMBL, 
+sn674 = sn674_DE_sim$ENSEMBL, 
+sn677 = sn677_DE_sim$ENSEMBL, 
+sn753 = sn753_DE_sim$ENSEMBL, 
+sn756 = sn756_DE_sim$ENSEMBL, 
+sn810 = sn810_DE_sim$ENSEMBL,
+sn517 = sn517_DE_sim$ENSEMBL,
+sn521 = sn521_DE_sim$ENSEMBL,
+sn528 = sn528_DE_sim$ENSEMBL,
+sn529 = sn529_DE_sim$ENSEMBL,
+sn534 = sn534_DE_sim$ENSEMBL,
+sn553 = sn553_DE_sim$ENSEMBL,
+sn649 = sn649_DE_sim$ENSEMBL,
+sn667 = sn667_DE_sim$ENSEMBL,
+sn735 = sn735_DE_sim$ENSEMBL,
+sn747 = sn747_DE_sim$ENSEMBL,
+sn767 = sn767_DE_sim$ENSEMBL)
+
+DE_sel_simComb = make_comb_mat(DE_sel12_sim, min_set_size = 50, top_n_sets = 50)
+DE_sel_simCom_filt <- DE_sel_simComb[comb_size(DE_sel_simComb) >= 50]
+
+UpSet(DE_sel_simCom_filt, top_annotation = upset_top_annotation(DE_sel_simCom_filt, add_numbers = TRUE))
+
+UpSet(DE_sel_simCom_filt, top_annotation = upset_top_annotation(DE_sel_simCom_filt, add_numbers = TRUE, axis_param = list(gp = gpar(fontsize = 18))), comb_order = order(comb_size(DE_sel_simCom_filt)), row_names_gp = gpar(fontsize = 20))
+
+
+```
+
+
+
+```{r}
+
+#1
+sn503_pit <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN503/DE_pitavastatin.txt")
+
+sn503_DE_pit <- sn503_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#2
+
+sn505_pit <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN505/DE_pitavastatin.txt")
+
+sn505_DE_pit <- sn505_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#3
+
+sn508_pit <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN508/DE_pitavastatin.txt")
+
+sn508_DE_pit <- sn508_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#4
+
+sn520_pit <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN520/DE_pitavastatin.txt")
+
+sn520_DE_pit <- sn520_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#5
+sn533_pit <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN533/DE_pitavastatin.txt")
+
+sn533_DE_pit <- sn533_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#6
+
+sn575_pit <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN575/DE_pitavastatin.txt")
+
+sn575_DE_pit <- sn575_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#7
+sn579_pit <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN579/DE_pitavastatin.txt")
+
+sn579_DE_pit <- sn579_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#8
+sn674_pit <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN674/DE_pitavastatin.txt")
+
+sn674_DE_pit <- sn674_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+
+#9
+
+sn677_pit <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN677/DE_pitavastatin.txt")
+
+sn677_DE_pit <- sn677_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#10
+sn753_pit <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN753/DE_pitavastatin.txt")
+
+sn753_DE_pit <- sn753_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#11
+
+sn756_pit <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN756/DE_pitavastatin.txt")
+
+sn756_DE_pit <- sn756_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+
+#12
+
+sn810_pit <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN810/DE_pitavastatin.txt")
+
+sn810_DE_pit <- sn810_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#13
+
+sn517_pit <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN517/DE_pitavastatin.txt")
+
+sn517_DE_pit <- sn517_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#14
+
+
+sn521_pit <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN521/DE_pitavastatin.txt")
+
+sn521_DE_pit <- sn521_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#15
+
+sn528_pit <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN528/DE_pitavastatin.txt")
+
+sn528_DE_pit <- sn528_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#16
+
+sn529_pit <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN529/DE_pitavastatin.txt")
+
+sn529_DE_pit <- sn529_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#17
+
+
+sn534_pit <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN534/DE_pitavastatin.txt", header = T)
+
+sn534_DE_pit <- sn534_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#18
+
+
+sn553_pit <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN553/DE_pitavastatin.txt")
+
+sn553_DE_pit <- sn553_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#19
+
+sn649_pit <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN649/DE_pitavastatin.txt", header = T)
+
+sn649_DE_pit <- sn649_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#20
+
+
+sn667_pit <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN667/DE_pitavastatin.txt")
+
+sn667_DE_pit <- sn667_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#21
+
+sn735_pit <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN735/DE_pitavastatin.txt")
+
+sn735_DE_pit <- sn735_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#22
+
+sn747_pit <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN747/DE_pitavastatin.txt")
+
+sn747_DE_pit <- sn747_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#23
+
+sn767_pit <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN767/DE_pitavastatin.txt")
+
+sn767_DE_pit <- sn767_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+
+
+
+
+
+
+
+
+```
+
+
+
+```{r}
+
+DE_sel12_pit <- list( sn503 = sn503_DE_pit$ENSEMBL, sn505 = sn505_DE_pit$ENSEMBL,
+sn508 = sn508_DE_pit$ENSEMBL, 
+sn520 = sn520_DE_pit$ENSEMBL,
+sn533 = sn533_DE_pit$ENSEMBL, 
+sn575 = sn575_DE_pit$ENSEMBL, 
+sn579 = sn579_DE_pit$ENSEMBL, 
+sn674 = sn674_DE_pit$ENSEMBL, 
+sn677 = sn677_DE_pit$ENSEMBL, 
+sn753 = sn753_DE_pit$ENSEMBL, 
+sn756 = sn756_DE_pit$ENSEMBL, 
+sn810 = sn810_DE_pit$ENSEMBL,
+sn517 = sn517_DE_pit$ENSEMBL,
+sn521 = sn521_DE_pit$ENSEMBL,
+sn528 = sn528_DE_pit$ENSEMBL,
+sn529 = sn529_DE_pit$ENSEMBL,
+sn534 = sn534_DE_pit$ENSEMBL,
+sn553 = sn553_DE_pit$ENSEMBL,
+sn649 = sn649_DE_pit$ENSEMBL,
+sn667 = sn667_DE_pit$ENSEMBL,
+sn735 = sn735_DE_pit$ENSEMBL,
+sn747 = sn747_DE_pit$ENSEMBL,
+sn767 = sn767_DE_pit$ENSEMBL)
+
+DE_sel_pitComb = make_comb_mat(DE_sel12_pit, min_set_size = 50, top_n_sets = 50)
+DE_sel_pitCom_filt <- DE_sel_pitComb[comb_size(DE_sel_pitComb) >= 50]
+
+UpSet(DE_sel_pitCom_filt, top_annotation = upset_top_annotation(DE_sel_pitCom_filt, add_numbers = TRUE))
+
+UpSet(DE_sel_pitCom_filt, top_annotation = upset_top_annotation(DE_sel_pitCom_filt, add_numbers = TRUE, axis_param = list(gp = gpar(fontsize = 18))), comb_order = order(comb_size(DE_sel_pitCom_filt)), row_names_gp = gpar(fontsize = 20))
+
+
+
+```
+
+
+```{r}
+
+#SN503, SN505, SN508, SN520, SN533, SN575, SN579, SN674, SN677, SN753, SN756, SN810
+DE_allD_sn505 <- list( bortezomib = sn505_DE_bort$ENSEMBL, pitavastatin = sn505_DE_pit$ENSEMBL,
+simvastatin = sn505_DE_sim$ENSEMBL, 
+auranofin = sn505_DE_arf$ENSEMBL,
+mitoxantrone = sn505_DE_mitx$ENSEMBL)
+
+DE_allD_sn505Comb = make_comb_mat(DE_allD_sn505, min_set_size = 20, top_n_sets = 5)
+DE_allD_sn505Comb <- DE_sel_pitComb[comb_size(DE_sel_pitComb) >= 20]
+
+#UpSet(DE_sel_pitCom_filt, top_annotation = upset_top_annotation(DE_sel_pitCom_filt, add_numbers = TRUE))
+
+UpSet(DE_allD_sn505Comb, top_annotation = upset_top_annotation(DE_allD_sn505Comb, add_numbers = TRUE, axis_param = list(gp = gpar(fontsize = 18))), comb_order = order(comb_size(DE_allD_sn505Comb)), row_names_gp = gpar(fontsize = 20))
+
+
+```
+
+
+
+```{r}
+
+#1
+sn503_alb <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN503/DE_albendazole.txt")
+
+sn503_DE_alb <- sn503_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#2
+
+sn505_alb <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN505/DE_albendazole.txt")
+
+sn505_DE_alb <- sn505_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#3
+
+sn508_alb <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN508/DE_albendazole.txt")
+
+sn508_DE_alb <- sn508_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#4
+
+sn520_alb <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN520/DE_albendazole.txt")
+
+sn520_DE_alb <- sn520_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#5
+sn533_alb <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN533/DE_albendazole.txt")
+
+sn533_DE_alb <- sn533_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#6
+
+
+sn575_alb <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN575/DE_albendazole.txt")
+
+sn575_DE_alb <- sn575_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#7
+sn579_alb <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN579/DE_albendazole.txt")
+
+sn579_DE_alb <- sn579_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#8
+sn674_alb <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN674/DE_albendazole.txt")
+
+sn674_DE_alb <- sn674_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+
+#9
+
+sn677_alb <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN677/DE_albendazole.txt")
+
+sn677_DE_alb <- sn677_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#10
+sn753_alb <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN753/DE_albendazole.txt")
+
+sn753_DE_alb <- sn753_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#11
+
+sn756_alb <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN756/DE_albendazole.txt")
+
+sn756_DE_alb <- sn756_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+
+#12
+
+sn810_alb <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN810/DE_albendazole.txt")
+
+sn810_DE_alb <- sn810_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#13
+
+sn517_alb <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN517/DE_albendazole.txt")
+
+sn517_DE_alb <- sn517_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#14
+
+
+sn521_alb <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN521/DE_albendazole.txt")
+
+sn521_DE_alb <- sn521_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#15
+
+sn528_alb <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN528/DE_albendazole.txt")
+
+sn528_DE_alb <- sn528_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#16
+
+sn529_alb <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN529/DE_albendazole.txt")
+
+sn529_DE_alb <- sn529_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#17
+
+
+sn534_alb <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN534/DE_albendazole.txt")
+
+sn534_DE_alb <- sn534_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#18
+
+
+sn553_alb <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN553/DE_albendazole.txt")
+
+sn553_DE_alb <- sn553_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#19
+
+sn649_alb <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN649/DE_albendazole.txt", header = T)
+
+sn649_DE_alb <- sn649_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#20
+
+
+sn667_alb <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN667/DE_albendazole.txt")
+
+sn667_DE_alb <- sn667_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#21
+
+sn735_alb <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN735/DE_albendazole.txt")
+
+sn735_DE_alb <- sn735_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#22
+
+sn747_alb <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN747/DE_albendazole.txt")
+
+sn747_DE_alb <- sn747_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#23
+
+sn767_alb <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN767/DE_albendazole.txt")
+
+sn767_DE_alb <- sn767_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+
+
+
+
+```
+
+
+
+```{r}
+#1
+sn503_col <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN503/DE_colchicine.txt")
+
+sn503_DE_col <- sn503_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#2
+
+sn505_col <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN505/DE_colchicine.txt")
+
+sn505_DE_col <- sn505_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#3
+
+sn508_col <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN508/DE_colchicine.txt", header = T)
+
+sn508_DE_col <- sn508_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#4
+
+sn520_col <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN520/DE_colchicine.txt")
+
+sn520_DE_col <- sn520_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#5
+sn533_col <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN533/DE_colchicine.txt")
+
+sn533_DE_col <- sn533_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#6
+
+sn575_col <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN575/DE_colchicine.txt")
+
+sn575_DE_col <- sn575_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#7
+sn579_col <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN579/DE_colchicine.txt")
+
+sn579_DE_col <- sn579_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#8
+sn674_col <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN674/DE_colchicine.txt")
+
+sn674_DE_col <- sn674_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+
+#9
+
+sn677_col <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN677/DE_colchicine.txt")
+
+sn677_DE_col <- sn677_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#10
+sn753_col <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN753/DE_colchicine.txt")
+
+sn753_DE_col <- sn753_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#11
+
+sn756_col <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN756/DE_colchicine.txt")
+
+sn756_DE_col <- sn756_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+
+#12
+
+sn810_col <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN810/DE_colchicine.txt")
+
+sn810_DE_col <- sn810_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#13
+
+sn517_col <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN517/DE_colchicine.txt")
+
+sn517_DE_col <- sn517_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#14
+
+
+sn521_col <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN521/DE_colchicine.txt")
+
+sn521_DE_col <- sn521_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#15
+
+sn528_col <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN528/DE_colchicine.txt")
+
+sn528_DE_col <- sn528_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#16
+
+sn529_col <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN529/DE_colchicine.txt")
+
+sn529_DE_col <- sn529_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#17
+
+
+sn534_col <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN534/DE_colchicine.txt")
+
+sn534_DE_col <- sn534_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#18
+
+
+sn553_col <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN553/DE_colchicine.txt")
+
+sn553_DE_col <- sn553_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#19
+
+sn649_col <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN649/DE_colchicine.txt", header = T)
+
+sn649_DE_col <- sn649_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#20
+
+
+sn667_col <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN667/DE_colchicine.txt")
+
+sn667_DE_col <- sn667_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#21
+
+sn735_col <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN735/DE_colchicine.txt")
+
+sn735_DE_col <- sn735_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#22
+
+sn747_col <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN747/DE_colchicine.txt")
+
+sn747_DE_col <- sn747_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#23
+
+sn767_col <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN767/DE_colchicine.txt")
+
+sn767_DE_col <- sn767_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+
+```
+
+
+```{r}
+
+#1
+sn503_dsf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN503/DE_disulfiram.txt")
+
+sn503_DE_dsf <- sn503_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#2
+
+sn505_dsf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN505/DE_disulfiram.txt")
+
+sn505_DE_dsf <- sn505_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#3
+
+sn508_dsf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN508/DE_disulfiram.txt")
+
+sn508_DE_dsf <- sn508_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#4
+
+sn520_dsf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN520/DE_disulfiram.txt")
+
+sn520_DE_dsf <- sn520_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#5
+sn533_dsf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN533/DE_disulfiram.txt", header = T)
+
+sn533_DE_dsf <- sn533_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#6
+
+sn575_dsf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN575/DE_disulfiram.txt")
+
+sn575_DE_dsf <- sn575_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#7
+sn579_dsf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN579/DE_disulfiram.txt")
+
+sn579_DE_dsf <- sn579_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#8
+sn674_dsf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN674/DE_disulfiram.txt")
+
+sn674_DE_dsf <- sn674_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+
+#9
+
+sn677_dsf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN677/DE_disulfiram.txt")
+
+sn677_DE_dsf <- sn677_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#10
+sn753_dsf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN753/DE_disulfiram.txt")
+
+sn753_DE_dsf <- sn753_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#11
+
+sn756_dsf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN756/DE_disulfiram.txt")
+
+sn756_DE_dsf <- sn756_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+
+#12
+
+sn810_dsf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN810/DE_disulfiram.txt")
+
+sn810_DE_dsf <- sn810_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#13
+
+sn517_dsf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN517/DE_disulfiram.txt")
+
+sn517_DE_dsf <- sn517_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#14
+
+
+sn521_dsf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN521/DE_disulfiram.txt")
+
+sn521_DE_dsf <- sn521_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#15
+
+sn528_dsf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN528/DE_disulfiram.txt")
+
+sn528_DE_dsf <- sn528_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#16
+
+sn529_dsf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN529/DE_disulfiram.txt")
+
+sn529_DE_dsf <- sn529_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#17
+
+
+sn534_dsf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN534/DE_disulfiram.txt")
+
+sn534_DE_dsf <- sn534_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#18
+
+
+sn553_dsf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN553/DE_disulfiram.txt", header = T)
+
+sn553_DE_dsf <- sn553_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#19
+
+sn649_dsf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN649/DE_disulfiram.txt", header = T)
+
+sn649_DE_dsf <- sn649_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#20
+
+
+sn667_dsf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN667/DE_disulfiram.txt")
+
+sn667_DE_dsf <- sn667_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#21
+
+sn735_dsf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN735/DE_disulfiram.txt")
+
+sn735_DE_dsf <- sn735_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#22
+
+sn747_dsf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN747/DE_disulfiram.txt")
+
+sn747_DE_dsf <- sn747_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+#23
+
+sn767_dsf <- read.table("/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/SN767/DE_disulfiram.txt")
+
+sn767_DE_dsf <- sn767_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+
+
+
+
+```
+

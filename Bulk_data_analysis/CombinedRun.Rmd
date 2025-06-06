@@ -1,0 +1,3375 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+Combined counts (counts_alltog_set1to6) and metadata (meta_set1to6_allE)
+
+#~/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/proc/Counts_matrix_setR1to6_all.csv
+#~/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal/proc/metadata_set1to6.csv
+
+```{r}
+#Librarires
+options(bitmapType = "cairo")
+library(tidyverse)
+library(ggplot2)
+library(reshape2)
+library(edgeR)
+library(fs)
+#library(ggdist)
+library(tidyquant)
+library(DT)
+#library(DESeq2)
+library(pheatmap)
+library(DESeq2)
+library(RColorBrewer)
+library(pheatmap)
+library(forcats)
+library(tidyr)
+library(dplyr)
+library(calibrate)
+library(biomaRt)
+library(digest)
+library(org.Hs.eg.db)
+library(vsn)
+library(plotly)
+library(ggplot2)
+library(ggrepel)
+library(ComplexHeatmap)
+library(clusterProfiler)
+library(ReactomePA)
+library(DOSE)
+
+```
+
+Normalization plots FOR EACH SEQUENCING RUN AND OVERALL
+
+```{r}
+
+dds_setR1 <- DESeqDataSetFromMatrix(countData = round(count_setR1), colData = meta_setR1_3, design= ~ Cell.Line + Treatment)
+dds_setR1$Treatment <- relevel(dds_setR1$Treatment, ref = "Control")
+keep <- rowSums(counts(dds_setR1) >= 10) >= smallestGroupSize
+dds_setR1 <- dds_setR1[keep,]
+dds_setR1.ds <- estimateSizeFactors(dds_setR1)
+boxplot(log2(counts(dds_setR1)+1), notch=TRUE, main = "Non-normalized read counts", ylab="log2(read counts)", cex = .6)
+
+boxplot(log2(counts(dds_setR1.ds, normalize= TRUE) +1), notch=TRUE, main = "Size-factor-normalized read counts", ylab="log2(read counts)", cex = .6)
+
+#count_setR1, meta_setR1_2
+
+
+dds_setR2 <- DESeqDataSetFromMatrix(countData = round(count_setR2), colData = meta_setR2_2, design= ~ Cell.Line + Treatment)
+dds_setR2$Treatment <- relevel(dds_setR2$Treatment, ref = "Control")
+keep <- rowSums(counts(dds_setR2) >= 10) >= smallestGroupSize
+dds_setR2 <- dds_setR2[keep,]
+dds_setR2.ds <- estimateSizeFactors(dds_setR2)
+boxplot(log2(counts(dds_setR2)+1), notch=TRUE, main = "Non-normalized read counts", ylab="log2(read counts)", cex = .6)
+
+boxplot(log2(counts(dds_setR2.ds, normalize= TRUE) +1), notch=TRUE, main = "Size-factor-normalized read counts", ylab="log2(read counts)", cex = .6)
+
+#count_setR2, meta_setR2_2
+
+
+#count_setR3, meta_setR3_2
+
+dds_setR3 <- DESeqDataSetFromMatrix(countData = round(count_setR3), colData = meta_setR3_2, design= ~ Cell.Line + Treatment)
+dds_setR3$Treatment <- relevel(dds_setR3$Treatment, ref = "Control")
+keep <- rowSums(counts(dds_setR3) >= 10) >= smallestGroupSize
+dds_setR3 <- dds_setR3[keep,]
+dds_setR3.ds <- estimateSizeFactors(dds_setR3)
+boxplot(log2(counts(dds_setR3)+1), notch=TRUE, main = "Non-normalized read counts", ylab="log2(read counts)", cex = .6)
+
+boxplot(log2(counts(dds_setR3.ds, normalize= TRUE) +1), notch=TRUE, main = "Size-factor-normalized read counts", ylab="log2(read counts)", cex = .6)
+
+
+#count_setR4, meta_setR4_2
+
+dds_setR4 <- DESeqDataSetFromMatrix(countData = round(count_setR4), colData = meta_setR4_3, design= ~ Cell.Line + Treatment)
+dds_setR4$Treatment <- relevel(dds_setR4$Treatment, ref = "Control")
+keep <- rowSums(counts(dds_setR4) >= 10) >= smallestGroupSize
+dds_setR4 <- dds_setR4[keep,]
+dds_setR4.ds <- estimateSizeFactors(dds_setR4)
+boxplot(log2(counts(dds_setR4)+1), notch=TRUE, main = "Non-normalized read counts", ylab="log2(read counts)", cex = .6)
+
+boxplot(log2(counts(dds_setR4.ds, normalize= TRUE) +1), notch=TRUE, main = "Size-factor-normalized read counts", ylab="log2(read counts)", cex = .6)
+
+
+#count_setR6, meta_setR6_2
+
+dds_setR6 <- DESeqDataSetFromMatrix(countData = round(count_setR6), colData = meta_setR6_3, design= ~ Cell.Line + Treatment)
+dds_setR6$Treatment <- relevel(dds_setR6$Treatment, ref = "Control")
+keep <- rowSums(counts(dds_setR6) >= 10) >= smallestGroupSize
+dds_setR6 <- dds_setR6[keep,]
+dds_setR6.ds <- estimateSizeFactors(dds_setR6)
+boxplot(log2(counts(dds_setR6)+1), notch=TRUE, main = "Non-normalized read counts", ylab="log2(read counts)", cex = .6)
+
+boxplot(log2(counts(dds_setR6.ds, normalize= TRUE) +1), notch=TRUE, main = "Size-factor-normalized read counts", ylab="log2(read counts)", cex = .6)
+
+#revised: dds_setR6_cq, meta_setR6_3_cq, count_setR6_cq
+
+#count_setR5, meta_setR5_2
+
+dds_setR5 <- DESeqDataSetFromMatrix(countData = round(count_setR5), colData = meta_setR5_3, design= ~ Cell.Line + Treatment)
+dds_setR5$Treatment <- relevel(dds_setR5$Treatment, ref = "Control")
+keep <- rowSums(counts(dds_setR5) >= 10) >= smallestGroupSize
+dds_setR5 <- dds_setR5[keep,]
+dds_setR5.ds <- estimateSizeFactors(dds_setR5)
+boxplot(log2(counts(dds_setR5)+1), notch=TRUE, main = "Non-normalized read counts", ylab="log2(read counts)", cex = .6)
+
+boxplot(log2(counts(dds_setR5.ds, normalize= TRUE) +1), notch=TRUE, main = "Size-factor-normalized read counts", ylab="log2(read counts)", cex = .6)
+
+
+#edited counts file: meta_setR5_3_cq, count_setR5_cq
+dds_setR5_cq <- DESeqDataSetFromMatrix(countData = round(count_setR5_cq), colData = meta_setR5_3_cq, design= ~ Cell.Line + Treatment)
+dds_setR5_cq$Treatment <- relevel(dds_setR5_cq$Treatment, ref = "Control")
+keep <- rowSums(counts(dds_setR5_cq) >= 10) >= smallestGroupSize
+dds_setR5_cq <- dds_setR5_cq[keep,]
+dds_setR5_cq.ds <- estimateSizeFactors(dds_setR5_cq)
+boxplot(log2(counts(dds_setR5_cq.ds, normalize= TRUE) +1), notch=TRUE, main = "Size-factor-normalized read counts", ylab="log2(read counts)", cex = .6)
+
+
+```
+
+
+PROCESSING DATA FOR ALL SAMPLES TOGETHER 
+
+```{r}
+
+dds_all6 <- DESeqDataSetFromMatrix(countData = round(counts_alltog_set1to6_2), colData = meta_set1to6_allE2, design= ~ Cell.Line + Treatment)
+dds_all6$Treatment <- relevel(dds_all6$Treatment, ref = "Control")
+
+
+smallestGroupSize <- 2
+keep <- rowSums(counts(dds_all6) >= 10) >= smallestGroupSize
+dds_all6 <- dds_all6[keep,]
+
+dds_all6.ds <- estimateSizeFactors(dds_all6)
+
+```
+
+
+```{r}
+vsd <- vst(dds_all6, blind=FALSE)
+
+pcaData <- plotPCA(vsd, intgroup=c("Treatment", "Cell.Line"), returnData=TRUE)
+percentVar <- round(100 * attr(pcaData, "percentVar"))
+ggplot(pcaData, aes(PC1, PC2, color=Treatment, shape=Cell.Line)) +
+geom_point(size=3) + xlab(paste0("PC1: ",percentVar[1],"% variance")) + ylab(paste0("PC2: ",percentVar[2],"% variance")) + coord_fixed()
+
+pc_set1 <-ggplot(pcaData, aes(PC1, PC2, color=Treatment, shape=Cell.Line)) +
+geom_point(size=3) + xlab(paste0("PC1: ",percentVar[1],"% variance")) + ylab(paste0("PC2: ",percentVar[2],"% variance")) + coord_fixed()
+ggplotly(pc_set1)
+
+```
+
+
+
+```{r}
+#PCA by cell line
+sample_cellsN <-unique(meta_set1to6_allE2$Cell.Line)
+
+#png(file = "combined_PCA_run1to6.png", bg = "transparent", height = 1400, width = 650)
+#par(mfrow= c(6,4) )
+
+for(i in 1:length(sample_cellsN)){
+  met_tmp <- meta_set1to6_allE2 %>% filter( Cell.Line %in% sample_cellsN[i])
+  cnt_tmp <- counts_alltog_set1to6_2 %>% select(met_tmp$ID)
+  dds_tmp <- DESeqDataSetFromMatrix(countData = round(cnt_tmp), colData = met_tmp, design= ~ Treatment)
+  vsd_tmp <- vst(dds_tmp, blind=FALSE)
+  pcaDat_cell <- plotPCA(vsd_tmp, intgroup=c("Treatment"), returnData=TRUE)
+  percentVar_gp <- round(100 * attr(pcaDat_cell, "percentVar"))
+ ggplot(pcaDat_cell, aes(PC1, PC2, color=Treatment)) + geom_point(size=3) + xlab(paste0("PC1: ",percentVar_gp[1],"% variance")) + ylab(paste0("PC2: ",percentVar_gp[2],"% variance")) + coord_fixed()
+ #tmp_fil <- paste("PCA_plot_cell", sample_cellsN[i], ".png", sep = "_")
+ #ggsave(tmp_fil)
+}
+
+#dev.off()
+
+
+```
+
+
+```{r}
+
+#PCA by drugs
+drugs_cellsN <-unique(meta_set1to6_allE2$Treatment)
+
+for(i in 2:length(drugs_cellsN)){
+  met_tmp2 <- meta_set1to6_allE2 %>% filter( Treatment %in% drugs_cellsN[i] | Treatment == "Control")
+  cnt_tmp2 <- counts_alltog_set1to6_2 %>% select(met_tmp2$ID)
+  dds_tmp2 <- DESeqDataSetFromMatrix(countData = round(cnt_tmp2), colData = met_tmp2, design= ~ Cell.Line)
+  vsd_tmp2 <- vst(dds_tmp2, blind=FALSE)
+  pcaDat_cell2 <- plotPCA(vsd_tmp2, intgroup=c("Cell.Line"), returnData=TRUE)
+  percentVar_gp2 <- round(100 * attr(pcaDat_cell2, "percentVar"))
+ ggplot(pcaDat_cell2, aes(PC1, PC2, color=Cell.Line)) + geom_point(size=3) + xlab(paste0("PC1: ",percentVar_gp2[1],"% variance")) + ylab(paste0("PC2: ",percentVar_gp2[2],"% variance")) + coord_fixed()
+ tmp_fil2 <- paste("PCA_plot_cell", drugs_cellsN[i], ".png", sep = "_")
+ ggsave(tmp_fil2)
+}
+
+
+
+
+
+```
+
+
+
+1. ANALYZING CANCER HALLMARKS IN BORTEZOMIB TREATED SAMPLES
+
+```{r}
+
+DEgenes_bortO <- c()
+
+resT_dir <- "/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal"
+cells_sampM <- unique(meta_set1to6_allE2$Cell.Line)
+
+for(i in 1:length(cells_sampM)){
+  fil_DEres <- paste(resT_dir,cells_sampM[i],"DE_bortezomib.txt", sep="/")
+  
+  resF_bort <- read.table(fil_DEres, header = T) 
+  cell_DE_bort <- resF_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+  ltNam <- paste("bort",i, sep = "_")
+  DEgenes_bortO[[cells_sampM[i]]] <- list(ltNam = cell_DE_bort$ENSEMBL)
+  
+  }
+
+
+
+
+```
+
+
+
+```{r}
+
+BORT_regsFuncAll <-c()
+BORT_hallM <- c()
+
+cell_line_no <- length(DEgenes_bortO)
+
+for(i in 1:length(DEgenes_bortO)){
+  cell_name <- names(DEgenes_bortO)
+
+  DE_genes_btz <- DEgenes_bortO[[cell_name[i]]]$ltNam
+  
+  
+  ##Reactome
+  gen_ID_btz = bitr(DE_genes_btz, fromType="ENSEMBL", toType="ENTREZID", OrgDb="org.Hs.eg.db")
+  rct_btz <- enrichPathway(gene=gen_ID_btz$ENTREZID, pvalueCutoff = 0.05, readable=TRUE)
+ #head(x)
+
+  ##GO BP
+ego_btz <- enrichGO(gene   = gen_ID_btz$ENTREZID,
+                OrgDb  = org.Hs.eg.db,
+               ont  = "BP",
+               pAdjustMethod = "BH",
+               pvalueCutoff  = 0.01,
+               qvalueCutoff  = 0.05,
+               readable      = TRUE)
+
+
+go_mf_btz <- enrichGO(gene = gen_ID_btz$ENTREZID,
+                OrgDb = org.Hs.eg.db,
+               ont  = "MF",
+               pAdjustMethod = "BH",
+               pvalueCutoff  = 0.01,
+               qvalueCutoff  = 0.05,
+               readable      = TRUE)
+
+
+## KEGG
+
+kk_btz <- enrichKEGG(gene = gen_ID_btz$ENTREZID,
+                  organism   = 'hsa',
+                  pvalueCutoff = 0.05)
+
+#regID_ot <- regulonLst$Regulon.ID[i]
+
+## MsigDB hallmarks
+
+gen_sym_btz = bitr(DE_genes_btz, fromType="ENSEMBL", toType="SYMBOL", OrgDb="org.Hs.eg.db")
+
+riches_btz <- enricher(gene=gen_sym_btz$SYMBOL, TERM2GENE= h_t2g, pvalueCutoff = 0.05, minGSSize = 50, qvalueCutoff = 0.1, pAdjustMethod = "bonferroni" )
+hall_msig_btz <- as.data.frame(riches_btz)
+
+   kegg_rich_btz <- c()
+   React_rich_btz <- c()
+   gobp_rich_btz <- c()
+   gomf_rich_btz <- c()
+   hall_rich_btz <- c()
+   
+   if(!is.null(kk_btz)){
+   kegg_rich_btz <- cbind(cell_name[i],"Kegg", kk_btz[1:20,])
+   }
+   if(!is.null(rct_btz)){
+   React_rich_btz <- cbind(cell_name[i],"Reactome", rct_btz[1:20,])
+   }
+   if(!is.null(ego_btz)){
+   gobp_rich_btz <- cbind(cell_name[i],"GObp",ego_btz[1:20,])
+   }
+   if(!is.null(go_mf_btz)){
+     gomf_rich_btz <- cbind(cell_name[i],"GOmf",go_mf_btz[1:20,])
+   }
+   if(is.data.frame(hall_msig_btz) & nrow(hall_msig_btz) != 0){
+     
+     hall_rich_btz <- cbind(cell_name[i],"Msig_hall", hall_msig_btz)
+   }
+   
+   
+   if(!is.null(kegg_rich_btz)){
+   names(kegg_rich_btz) <- c("Cell_line","Category","Description", "GeneRatio", "BgRatio", "pvalue", "p.adjust", "qvalue", "geneID","Count")
+   }
+   if(!is.null(React_rich_btz)){
+   names(React_rich_btz) <- c("Cell_line","Category","Description", "GeneRatio", "BgRatio", "pvalue", "p.adjust", "qvalue", "geneID","Count")
+   }
+   if(!is.null(gobp_rich_btz)){
+   names(gobp_rich_btz) <- c("Cell_line","Category","Description", "GeneRatio", "BgRatio", "pvalue", "p.adjust", "qvalue", "geneID","Count")
+   }
+   if(is.data.frame(hall_msig_btz) & nrow(hall_msig_btz) != 0){
+    names(hall_rich_btz) <- c("Cell_line","Category","Description", "GeneRatio", "BgRatio", "pvalue", "p.adjust", "qvalue", "geneID","Count") 
+     
+   }
+   
+   BORT_regsFuncAll <- rbind(BORT_regsFuncAll, kegg_rich_btz, React_rich_btz, gobp_rich_btz)
+   BORT_hallM <- rbind(BORT_hallM, hall_rich_btz)
+}
+
+write.table(BORT_regsFuncAll,"Res_gseaR/S1to6_btz_EnrichPathst10_bortezomib.txt")
+write.table(BORT_hallM, "Res_gseaR/S1to6_btz_Msig_hallmark_BTZ.txt" )
+
+
+```
+
+SUBSETTING EMT HALLMARK GENES AND CELL LINES EXHIBITING EMT (Bortezomib)
+
+#filtering criteria for cell lines showing EMT
+
+Gene ratio > 0.1 or gene count > 50
+
+```{r}
+
+btz_hall_rev <- read.table("Res_gseaR/S1to6_btz_Msig_hallmark_BTZ.txt", header = T)
+colnames(btz_hall_rev) <- c("Cell_line","Category","Description","Pathway","GeneRatio","BgRatio","pvalue","p.adjust","qvalue","geneID","Count")
+
+btz_hall_rev_filt <- btz_hall_rev %>% filter(Description == "HALLMARK_EPITHELIAL_MESENCHYMAL_TRANSITION" & p.adjust < 0.05) %>% separate(GeneRatio, sep = "/", into = c("GeneNo","CategoryNo")) %>% mutate(GRatio = as.numeric(GeneNo)/as.numeric(CategoryNo)) %>% filter(GRatio > 0.1 | Count > 50)
+
+btz_hall_rev_filt %>% select(Cell_line)
+
+```
+
+
+
+
+```{r}
+btz_hall_rev_filtA <- btz_hall_rev_filt %>% mutate(gene_list = str_replace_all(geneID, "/", ",")) %>% select(Cell_line, gene_list)
+
+btz_hall_rev_filtB <- btz_hall_rev_filtA %>% separate_rows(gene_list)
+
+btz_hall_rev_geneL <- unique(btz_hall_rev_filtB$gene_list)
+
+
+```
+
+COMBINING FILTERED DE GENE RESULTS
+
+```{r}
+
+
+sn503_DE_btz <- sn503_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN503")
+
+sn505_DE_btz <- sn505_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN505")
+
+sn508_DE_btz <- sn508_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN508")
+
+sn520_DE_btz <- sn520_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN520")
+
+sn533_DE_btz <- sn533_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN533")
+
+sn575_DE_btz <- sn575_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN575")
+
+sn579_DE_btz <- sn579_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN579")
+
+sn674_DE_btz <- sn674_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN674")
+
+sn677_DE_btz <- sn677_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN677")
+
+sn753_DE_btz <- sn753_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN753")
+
+sn756_DE_btz <- sn756_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN756")
+
+
+sn810_DE_btz <- sn810_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN810")
+
+sn517_DE_btz <- sn517_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN517")
+
+
+sn521_DE_btz <- sn521_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN521")
+
+sn528_DE_btz <- sn528_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN528")
+
+sn529_DE_btz <- sn529_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN529")
+
+sn534_DE_btz <- sn534_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN534")
+
+sn553_DE_btz <- sn553_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN553")
+
+sn649_DE_btz <- sn649_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN649")
+
+sn667_DE_btz <- sn667_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN667")
+
+sn735_DE_btz <- sn735_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN735")
+
+sn747_DE_btz <- sn747_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN747")
+
+
+sn767_DE_btz <- sn767_bort %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN767")
+
+
+bort_comB_deG <- rbind(sn553_DE_btz, sn528_DE_btz, sn735_DE_btz, sn667_DE_btz, sn747_DE_btz, sn756_DE_btz, sn753_DE_btz, sn517_DE_btz, sn575_DE_btz, sn521_DE_btz, sn810_DE_btz, sn767_DE_btz, sn533_DE_btz, sn505_DE_btz, sn677_DE_btz, sn529_DE_btz, sn534_DE_btz, sn520_DE_btz, sn503_DE_btz, sn508_DE_btz, sn674_DE_btz, sn649_DE_btz, sn579_DE_btz)
+
+```
+
+OBSERVING FOLD CHANGE
+
+```{r}
+## EMT hallmark genes
+btz_hall_rev_geneL_id_mult <- bitr(btz_hall_rev_geneL, fromType="SYMBOL", toType=c("ENTREZID", "ENSEMBL","GENENAME"), OrgDb="org.Hs.eg.db")
+
+bort_DE_EMTg_FC <- bort_comB_deG %>% filter(Cellline %in% btz_hall_rev_filt$Cell_line & ENSEMBL %in% btz_hall_rev_geneL_id_mult$ENSEMBL)
+
+bort_DE_EMTg_FC_wide <- bort_DE_EMTg_FC %>% select(ENSEMBL,log2FoldChange, Cellline) %>%pivot_wider(names_from = Cellline, values_from = log2FoldChange)
+
+bort_DE_EMTg_FC_wide2 <- as.data.frame(bort_DE_EMTg_FC_wide)
+rownames(bort_DE_EMTg_FC_wide2) <- bort_DE_EMTg_FC_wide2$ENSEMBL
+
+
+bort_DE_EMTg_FC_wide3 <- bort_DE_EMTg_FC_wide2[,-1]
+bort_DE_EMTg_FC_wide3[is.na(bort_DE_EMTg_FC_wide3)] <- 0
+
+pheatmap(as.matrix(bort_DE_EMTg_FC_wide3), na_col = "grey", fontsize_row = 0, fontsize_col = 14, breaks = c(-15,-1,0,1, 15), color = c("darkblue","lightblue","white","orange","red"))
+
+```
+
+OBSERVING NEFTEL MARKER GENES EXPRESSION
+
+```{r}
+## Neftel marker genes
+
+btz_neftelM_geneL_id_mult <- bitr(neftel_markMES, fromType="SYMBOL", toType=c("ENTREZID", "ENSEMBL","GENENAME"), OrgDb="org.Hs.eg.db")
+
+bort_DE_Neftelg_FC <- bort_comB_deG %>% filter(ENSEMBL %in% btz_neftelM_geneL_id_mult$ENSEMBL)
+
+bort_DE_Neftelg_FC_wide <- bort_DE_Neftelg_FC %>% select(SYMBOL,log2FoldChange, Cellline) %>%pivot_wider(names_from = Cellline, values_from = log2FoldChange)
+
+bort_DE_Neftelg_FC_wide2 <- as.data.frame(bort_DE_Neftelg_FC_wide)
+rownames(bort_DE_Neftelg_FC_wide2) <- bort_DE_Neftelg_FC_wide2$SYMBOL
+
+
+bort_DE_Neftelg_FC_wide3 <- bort_DE_Neftelg_FC_wide2[,-1]
+bort_DE_Neftelg_FC_wide3[is.na(bort_DE_Neftelg_FC_wide3)] <- 0
+
+pheatmap(as.matrix(bort_DE_Neftelg_FC_wide3), na_col = "grey", fontsize_row = 0, fontsize_col = 14, breaks = c(-10,-1,0,1, 10), color = c("darkblue","lightblue","white","orange","red"))
+
+
+
+```
+
+
+```{r}
+#verhaak proneural MES markers
+
+#SN575, SN505, SN508, SN667,  SN528, SN517, SN810, SN735, SN747, SN674; SN533, SN756, 
+
+verH_PN_geneL_id_mult <- bitr(verH_proNeural2, fromType="SYMBOL", toType=c("ENTREZID", "ENSEMBL","GENENAME"), OrgDb="org.Hs.eg.db")
+
+bort_DE_verHPN_FC <- bort_comB_deG %>% filter(ENSEMBL %in% verH_PN_geneL_id_mult$ENSEMBL)
+
+bort_DE_verHPN_FC_wide <- bort_DE_verHPN_FC %>% select(SYMBOL,log2FoldChange, Cellline) %>%pivot_wider(names_from = Cellline, values_from = log2FoldChange)
+
+bort_DE_verHPN_FC_wide2 <- as.data.frame(bort_DE_verHPN_FC_wide)
+rownames(bort_DE_verHPN_FC_wide2) <- bort_DE_verHPN_FC_wide2$SYMBOL
+
+
+bort_DE_verHPN_FC_wide3 <- bort_DE_verHPN_FC_wide2[,-1]
+bort_DE_verHPN_FC_wide3[is.na(bort_DE_verHPN_FC_wide3)] <- 0
+
+pheatmap(as.matrix(bort_DE_verHPN_FC_wide3), na_col = "grey", fontsize_row = 0, fontsize_col = 14, breaks = c(-10,-1,0,1, 10), color = c("darkblue","lightblue","white","orange","red"))
+
+
+
+
+
+
+```
+
+
+```{r}
+
+#selected cell lines showing PN-MES
+verH_MES_geneL_id_mult <- bitr(verH_mes2, fromType="SYMBOL", toType=c("ENTREZID", "ENSEMBL","GENENAME"), OrgDb="org.Hs.eg.db")
+
+bort_DE_verH_MES_FC <- bort_comB_deG %>% filter(ENSEMBL %in% verH_MES_geneL_id_mult$ENSEMBL)
+
+bort_DE_verH_MES_FC_wide <- bort_DE_verH_MES_FC %>% filter(Cellline %in% c("SN575", "SN505", "SN508", "SN667",  "SN528", "SN517", "SN810", "SN735", "SN747", "SN674", "SN533", "SN756")) %>%select(SYMBOL,log2FoldChange, Cellline) %>%pivot_wider(names_from = Cellline, values_from = log2FoldChange)
+
+bort_DE_verH_MES_FC_wide2 <- as.data.frame(bort_DE_verH_MES_FC_wide)
+rownames(bort_DE_verH_MES_FC_wide2) <- bort_DE_verH_MES_FC_wide2$SYMBOL
+
+
+bort_DE_verH_MES_FC_wide3 <- bort_DE_verH_MES_FC_wide2[,-1]
+bort_DE_verH_MES_FC_wide3[is.na(bort_DE_verH_MES_FC_wide3)] <- 0
+
+pheatmap(as.matrix(bort_DE_verH_MES_FC_wide3), na_col = "grey", fontsize_row = 0, fontsize_col = 14, breaks = c(-10,-1,0,1, 10), color = c("darkblue","lightblue","white","orange","red"))
+
+bort_DE_verHPN_FC_wide4 <- bort_DE_verHPN_FC_wide3[,c("SN575", "SN505", "SN508", "SN667",  "SN528", "SN517", "SN810", "SN735", "SN747", "SN674", "SN533", "SN756")]
+
+pheatmap(as.matrix(bort_DE_verHPN_FC_wide4), na_col = "grey", fontsize_row = 0, fontsize_col = 14, breaks = c(-15,-1,0,1, 15), color = c("darkblue","lightblue","white","orange","red"))
+
+```
+
+
+bort_TT
+         Drug Cell line            p-value          Gene ratio
+1  Bortezomib     SN553                  1 0.00854700854700855
+2  Bortezomib     SN553                  1 0.00854700854700855
+3  Bortezomib     SN528 0.0571468883881508   0.371794871794872
+4  Bortezomib     SN735  0.694535551374937   0.307692307692308
+5  Bortezomib     SN667  0.963957899008593   0.269230769230769
+6  Bortezomib     SN747  0.934357389161857   0.277777777777778
+7  Bortezomib     SN756   0.53412211845473   0.320512820512821
+8  Bortezomib     SN753  0.999999999998106   0.128205128205128
+9  Bortezomib     SN517  0.023321569838602   0.384615384615385
+10 Bortezomib     SN575  0.121667263281347   0.358974358974359
+11 Bortezomib     SN521                  1  0.0555555555555556
+12 Bortezomib     SN810  0.186622688262407    0.35042735042735
+13 Bortezomib     SN767                  1  0.0384615384615385
+14 Bortezomib     SN533  0.981688745412695   0.260683760683761
+15 Bortezomib     SN505  0.121667263281347   0.358974358974359
+16 Bortezomib     SN677                  1                   0
+17 Bortezomib     SN529                  1 0.00427350427350427
+18 Bortezomib     SN534                  1                   0
+19 Bortezomib     SN520                  1   0.047008547008547
+20 Bortezomib     SN503  0.999999999938931   0.141025641025641
+21 Bortezomib     SN508   0.53412211845473   0.320512820512821
+22 Bortezomib     SN674  0.999948375997511   0.209401709401709
+23 Bortezomib     SN579                  1   0.094017094017094
+
+
+
+
+```{r}
+
+#Bortezomib
+
+cells_bortLt <- unique(bort_comB_deG$Cellline)
+
+bort_comB_deG_listO <- rbind(length(unique(sn553_DE_btz$ENSEMBL)), length(unique(sn528_DE_btz$ENSEMBL)), length(unique(sn735_DE_btz$ENSEMBL)), length(unique(sn667_DE_btz$ENSEMBL)), length(unique(sn747_DE_btz$ENSEMBL)), length(unique(sn756_DE_btz$ENSEMBL)), length(unique(sn753_DE_btz$ENSEMBL)), length(unique(sn517_DE_btz$ENSEMBL)), length(unique(sn575_DE_btz$ENSEMBL)), length(unique(sn521_DE_btz$ENSEMBL)), length(unique(sn810_DE_btz$ENSEMBL)), length(unique(sn767_DE_btz$ENSEMBL)), length(unique(sn533_DE_btz$ENSEMBL)), length(unique(sn505_DE_btz$ENSEMBL)), length(unique(sn677_DE_btz$ENSEMBL)), length(unique(sn529_DE_btz$ENSEMBL)), length(unique(sn534_DE_btz$ENSEMBL)), length(unique(sn520_DE_btz$ENSEMBL)), length(unique(sn503_DE_btz$ENSEMBL)), length(unique(sn508_DE_btz$ENSEMBL)), length(unique(sn674_DE_btz$ENSEMBL)), length(unique(sn579_DE_btz$ENSEMBL)))
+
+for(g in 1:length(cells_bortLt)){
+  Deg_TF <- bort_comB_deG %>% filter(Cellline %in% cells_bortLt[g])
+  regVg_TF <- bort_comB_deG_listO[g,1]
+  comG <- bort_comB_deG %>% filter(ENSEMBL %in% verH_MES_geneL_id_mult$ENSEMBL & Cellline %in% cells_bortLt[g])
+  intDEmesG <- length(comG$ENSEMBL)
+  overA = uniBk - regVg_TF 
+  inte = intDEmesG -1
+  pval_hper <- phyper(q = inte, m = regVg_TF, n = overA, k = modGL, lower.tail = FALSE )
+  gr_mes <- intDEmesG/modGL
+  hp_stat <- cbind("Bortezomib", cells_bortLt[g], pval_hper, gr_mes, regVg_TF, intDEmesG)
+  colnames(hp_stat) <- c("Drug","Cell line", "p-value","Gene ratio","DiffG","Match")
+  des_mesT <- rbind(des_mesT, hp_stat)
+}
+  
+#disF_TT <-as.data.frame(des_mesT)
+
+
+
+```
+
+bort_TT %>% filter(`Gene ratio` > 0.1)
+         Drug Cell line            p-value        Gene ratio
+1  Bortezomib     SN528 0.0571468883881508 0.371794871794872
+2  Bortezomib     SN735  0.694535551374937 0.307692307692308
+3  Bortezomib     SN667  0.963957899008593 0.269230769230769
+4  Bortezomib     SN747  0.934357389161857 0.277777777777778
+5  Bortezomib     SN756   0.53412211845473 0.320512820512821
+6  Bortezomib     SN753  0.999999999998106 0.128205128205128
+7  Bortezomib     SN517  0.023321569838602 0.384615384615385
+8  Bortezomib     SN575  0.121667263281347 0.358974358974359
+9  Bortezomib     SN810  0.186622688262407  0.35042735042735
+10 Bortezomib     SN533  0.981688745412695 0.260683760683761
+11 Bortezomib     SN505  0.121667263281347 0.358974358974359
+12 Bortezomib     SN503  0.999999999938931 0.141025641025641
+13 Bortezomib     SN508   0.53412211845473 0.320512820512821
+14 Bortezomib     SN674  0.999948375997511 0.209401709401709
+
+
+
+bort_TT %>% filter(`p-value` < 0.05)
+        Drug Cell line           p-value        Gene ratio
+1 Bortezomib     SN517 0.023321569838602 0.384615384615385
+
+
+
+
+2. ANALYZING CANCER HALLMARKS IN PITAVASTATIN TREATED SAMPLES
+
+
+```{r}
+
+DEgenes_pstatO <- c()
+
+resT_dir <- "/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal"
+cells_sampM <- unique(meta_set1to6_allE2$Cell.Line)
+
+for(i in 1:length(cells_sampM)){
+  fil_DEres <- paste(resT_dir,cells_sampM[i],"DE_pitavastatin.txt", sep="/")
+  
+  resF_pstat <- read.table(fil_DEres, header = T) 
+  cell_DE_pstat <- resF_pstat %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+  ltNam <- paste("pstat",i, sep = "_")
+  DEgenes_pstatO[[cells_sampM[i]]] <- list(ltNam = cell_DE_pstat$ENSEMBL)
+  
+  }
+
+
+
+
+
+```
+
+
+
+```{r}
+
+PSTAT_regsFuncAll <-c()
+PSTAT_hallM <- c()
+
+cell_line_no <- length(DEgenes_pstatO)
+
+for(i in 1:length(DEgenes_pstatO)){
+  cell_name <- names(DEgenes_pstatO)
+
+  DE_genes_pst <- DEgenes_pstatO[[cell_name[i]]]$ltNam
+  
+  
+  ##Reactome
+  gen_ID_pst = bitr(DE_genes_psta, fromType="ENSEMBL", toType="ENTREZID", OrgDb="org.Hs.eg.db")
+  rct_pst <- enrichPathway(gene=gen_ID_pst$ENTREZID, pvalueCutoff = 0.05, readable=TRUE)
+ #head(x)
+
+  ##GO BP
+ego_pst <- enrichGO(gene   = gen_ID_pst$ENTREZID,
+                OrgDb  = org.Hs.eg.db,
+               ont  = "BP",
+               pAdjustMethod = "BH",
+               pvalueCutoff  = 0.01,
+               qvalueCutoff  = 0.05,
+               readable      = TRUE)
+
+
+go_mf_pst <- enrichGO(gene = gen_ID_pst$ENTREZID,
+                OrgDb = org.Hs.eg.db,
+               ont  = "MF",
+               pAdjustMethod = "BH",
+               pvalueCutoff  = 0.01,
+               qvalueCutoff  = 0.05,
+               readable      = TRUE)
+
+
+## KEGG
+
+kk_pst <- enrichKEGG(gene = gen_ID_pst$ENTREZID,
+                  organism   = 'hsa',
+                  pvalueCutoff = 0.05)
+
+#regID_ot <- regulonLst$Regulon.ID[i]
+
+## MsigDB hallmarks
+
+gen_sym_pst = bitr(DE_genes_pst, fromType="ENSEMBL", toType="SYMBOL", OrgDb="org.Hs.eg.db")
+
+riches_pst <- enricher(gene=gen_sym_pst$SYMBOL, TERM2GENE= h_t2g, pvalueCutoff = 0.05, minGSSize = 50, qvalueCutoff = 0.1, pAdjustMethod = "bonferroni" )
+hall_msig_pst <- as.data.frame(riches_pst)
+
+   kegg_rich_pst <- c()
+   React_rich_pst <- c()
+   gobp_rich_pst <- c()
+   gomf_rich_pst <- c()
+   hall_rich_pst <- c()
+   
+   if(!is.null(kk_pst)){
+   kegg_rich_pst <- cbind(cell_name[i],"Kegg", kk_pst[1:20,])
+   }
+   if(!is.null(rct_pst)){
+   React_rich_pst <- cbind(cell_name[i],"Reactome", rct_pst[1:20,])
+   }
+   if(!is.null(ego_pst)){
+   gobp_rich_pst <- cbind(cell_name[i],"GObp",ego_pst[1:20,])
+   }
+   if(!is.null(go_mf_pst)){
+     gomf_rich_pst <- cbind(cell_name[i],"GOmf",go_mf_pst[1:20,])
+   }
+   if(is.data.frame(hall_msig_pst) & nrow(hall_msig_pst) != 0){
+     
+     hall_rich_pst <- cbind(cell_name[i],"Msig_hall", hall_msig_pst)
+   }
+   
+   
+   if(!is.null(kegg_rich_pst)){
+   names(kegg_rich_pst) <- c("Cell_line","Category","Description", "GeneRatio", "BgRatio", "pvalue", "p.adjust", "qvalue", "geneID","Count")
+   }
+   if(!is.null(React_rich_pst)){
+   names(React_rich_pst) <- c("Cell_line","Category","Description", "GeneRatio", "BgRatio", "pvalue", "p.adjust", "qvalue", "geneID","Count")
+   }
+   if(!is.null(gobp_rich_pst)){
+   names(gobp_rich_pst) <- c("Cell_line","Category","Description", "GeneRatio", "BgRatio", "pvalue", "p.adjust", "qvalue", "geneID","Count")
+   }
+   if(is.data.frame(hall_msig_pst) & nrow(hall_msig_pst) != 0){
+    names(hall_rich_pst) <- c("Cell_line","Category","Description", "GeneRatio", "BgRatio", "pvalue", "p.adjust", "qvalue", "geneID","Count") 
+     
+   }
+   
+   PSTAT_regsFuncAll <- rbind(PSTAT_regsFuncAll, kegg_rich_pst, React_rich_pst, gobp_rich_pst)
+   PSTAT_hallM <- rbind(PSTAT_hallM, hall_rich_pst)
+}
+
+
+write.table(PSTAT_regsFuncAll,"Res_gseaR/S1to6_pstat_EnrichPathst10_pitavastatin.txt")
+write.table(PSTAT_hallM, "Res_gseaR/S1to6_pstat_Msig_hallmark_pitavastatin.txt" )
+
+
+
+
+```
+
+SUBSETTING EMT HALLMARK GENES AND CELL LINES EXHIBITING EMT (Pitavastatin)
+
+#filtering criteria for cell lines showing EMT
+
+Gene ratio > 0.1 or gene count > 50
+
+```{r}
+
+pstat_hall_rev <- read.table("Res_gseaR/S1to6_pstat_Msig_hallmark_pitavastatin.txt", header = T)
+colnames(pstat_hall_rev) <- c("Cell_line","Category","Description","Pathway","GeneRatio","BgRatio","pvalue","p.adjust","qvalue","geneID","Count")
+
+pstat_hall_rev_filt <- pstat_hall_rev %>% filter(Description == "HALLMARK_EPITHELIAL_MESENCHYMAL_TRANSITION" & p.adjust < 0.05) %>% separate(GeneRatio, sep = "/", into = c("GeneNo","CategoryNo")) %>% mutate(GRatio = as.numeric(GeneNo)/as.numeric(CategoryNo)) %>% filter(GRatio > 0.1 | Count > 50)
+
+pstat_hall_rev_filt %>% select(Cell_line)
+
+pstat_hall_rev_filtA <- pstat_hall_rev_filt %>% mutate(gene_list = str_replace_all(geneID, "/", ",")) %>% select(Cell_line, gene_list)
+
+pstat_hall_rev_filtB <- pstat_hall_rev_filtA %>% separate_rows(gene_list)
+
+pstat_hall_rev_geneL <- unique(pstat_hall_rev_filtB$gene_list)
+
+```
+
+
+```{r}
+
+sn503_DE_pita <- sn503_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN503")
+
+sn505_DE_pita <- sn505_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN505")
+
+sn508_DE_pita <- sn508_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN508")
+
+sn520_DE_pita <- sn520_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN520")
+
+
+sn533_DE_pita <- sn533_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN533")
+
+
+sn575_DE_pita <- sn575_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN575")
+
+sn579_DE_pita <- sn579_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN579")
+
+sn674_DE_pita <- sn674_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN674")
+
+sn677_DE_pita <- sn677_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN677")
+
+sn753_DE_pita <- sn753_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN753")
+
+sn756_DE_pita <- sn756_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN756")
+
+sn810_DE_pita <- sn810_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN810")
+
+
+sn517_DE_pita <- sn517_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN517")
+
+
+sn521_DE_pita <- sn521_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN521")
+
+
+sn528_DE_pita <- sn528_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN528")
+
+
+sn529_DE_pita <- sn529_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN529")
+
+
+sn534_DE_pita <- sn534_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN534")
+
+sn553_DE_pita <- sn553_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN553")
+
+
+sn649_DE_pita <- sn649_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN649")
+
+
+sn667_DE_pita <- sn667_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN667")
+
+
+sn735_DE_pita <- sn735_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN735")
+
+
+sn747_DE_pita <- sn747_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN747")
+
+
+sn767_DE_pita <- sn767_pit %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN767")
+
+pita_comB_deG <- rbind(sn553_DE_pita, sn528_DE_pita, sn735_DE_pita, sn667_DE_pita, sn747_DE_pita, sn756_DE_pita, sn753_DE_pita, sn517_DE_pita, sn575_DE_pita, sn521_DE_pita, sn810_DE_pita, sn767_DE_pita, sn533_DE_pita, sn505_DE_pita, sn677_DE_pita, sn529_DE_pita, sn534_DE_pita, sn520_DE_pita, sn503_DE_pita, sn508_DE_pita, sn674_DE_pita, sn649_DE_pita, sn579_DE_pita)
+
+```
+
+
+```{r}
+
+## EMT hallmark genes
+pita_hall_rev_geneL_id_mult <- bitr(pstat_hall_rev_geneL, fromType="SYMBOL", toType=c("ENTREZID", "ENSEMBL","GENENAME"), OrgDb="org.Hs.eg.db")
+
+pita_DE_EMTg_FC <- pita_comB_deG %>% filter(Cellline %in% pstat_hall_rev_filt$Cell_line & ENSEMBL %in% pita_hall_rev_geneL_id_mult$ENSEMBL)
+
+pita_DE_EMTg_FC_wide <- pita_DE_EMTg_FC %>% select(ENSEMBL,log2FoldChange, Cellline) %>%pivot_wider(names_from = Cellline, values_from = log2FoldChange)
+
+pita_DE_EMTg_FC_wide2 <- as.data.frame(pita_DE_EMTg_FC_wide)
+rownames(pita_DE_EMTg_FC_wide2) <- pita_DE_EMTg_FC_wide2$ENSEMBL
+
+
+pita_DE_EMTg_FC_wide3 <- pita_DE_EMTg_FC_wide2[,-1]
+pita_DE_EMTg_FC_wide3[is.na(pita_DE_EMTg_FC_wide3)] <- 0
+
+pheatmap(as.matrix(pita_DE_EMTg_FC_wide3), na_col = "grey", fontsize_row = 0, fontsize_col = 14, breaks = c(-15,-1,0,1, 15), color = c("darkblue","lightblue","white","orange","red"))
+
+
+```
+
+
+```{r}
+
+## Neftel marker genes
+
+neftelM_geneL_id_mult <- bitr(neftel_markMES, fromType="SYMBOL", toType=c("ENTREZID", "ENSEMBL","GENENAME"), OrgDb="org.Hs.eg.db")
+
+pita_DE_Neftelg_FC <- pita_comB_deG %>% filter(ENSEMBL %in% neftelM_geneL_id_mult$ENSEMBL)
+
+pita_DE_Neftelg_FC_wide <- pita_DE_Neftelg_FC %>% select(SYMBOL,log2FoldChange, Cellline) %>%pivot_wider(names_from = Cellline, values_from = log2FoldChange)
+
+pita_DE_Neftelg_FC_wide2 <- as.data.frame(pita_DE_Neftelg_FC_wide)
+rownames(pita_DE_Neftelg_FC_wide2) <- pita_DE_Neftelg_FC_wide2$SYMBOL
+
+
+pita_DE_Neftelg_FC_wide3 <- pita_DE_Neftelg_FC_wide2[,-1]
+pita_DE_Neftelg_FC_wide3[is.na(pita_DE_Neftelg_FC_wide3)] <- 0
+
+pheatmap(as.matrix(pita_DE_Neftelg_FC_wide3), na_col = "grey", fontsize_row = 0, fontsize_col = 14, breaks = c(-10,-1,0,1, 10), color = c("darkblue","lightblue","white","orange","red"))
+
+
+
+
+```
+
+
+```{r}
+
+#SN753, SN677, SN533, SN529, SN810, SN520, SN756, SN579,  SN508, SN553, SN503,   
+
+#verH_PN_geneL_id_mult
+
+pita_DE_verH_PN_FC <- pita_comB_deG %>% filter(ENSEMBL %in% verH_PN_geneL_id_mult$ENSEMBL)
+
+pita_DE_verH_PN_FC_wide <- pita_DE_verH_PN_FC %>% select(SYMBOL,log2FoldChange, Cellline) %>%pivot_wider(names_from = Cellline, values_from = log2FoldChange)
+
+pita_DE_verH_PN_FC_wide2 <- as.data.frame(pita_DE_verH_PN_FC_wide)
+rownames(pita_DE_verH_PN_FC_wide2) <- pita_DE_verH_PN_FC_wide2$SYMBOL
+
+
+pita_DE_verH_PN_FC_wide3 <- pita_DE_verH_PN_FC_wide2[,-1]
+pita_DE_verH_PN_FC_wide3[is.na(pita_DE_verH_PN_FC_wide3)] <- 0
+
+pheatmap(as.matrix(pita_DE_verH_PN_FC_wide3), na_col = "grey", fontsize_row = 0, fontsize_col = 14, breaks = c(-10,-1,0,1, 10), color = c("darkblue","lightblue","white","orange","red"))
+
+
+```
+
+
+```{r}
+
+
+pita_DE_verH_MES_FC <- pita_comB_deG %>% filter(ENSEMBL %in% verH_MES_geneL_id_mult$ENSEMBL)
+
+pita_DE_verH_MES_FC_wide <- pita_DE_verH_MES_FC %>% filter(Cellline %in% c("SN753", "SN677", "SN533", "SN529", "SN810", "SN520", "SN756", "SN579",  "SN508", "SN553", "SN503")) %>% select(SYMBOL,log2FoldChange, Cellline) %>%pivot_wider(names_from = Cellline, values_from = log2FoldChange)
+
+pita_DE_verH_MES_FC_wide2 <- as.data.frame(pita_DE_verH_MES_FC_wide)
+rownames(pita_DE_verH_MES_FC_wide2) <- pita_DE_verH_MES_FC_wide2$SYMBOL
+
+
+pita_DE_verH_MES_FC_wide3 <- pita_DE_verH_MES_FC_wide2[,-1]
+pita_DE_verH_MES_FC_wide3[is.na(pita_DE_verH_MES_FC_wide3)] <- 0
+
+pheatmap(as.matrix(pita_DE_verH_MES_FC_wide3), na_col = "grey", fontsize_row = 0, fontsize_col = 14, breaks = c(-10,-1,0,1, 10), color = c("darkblue","lightblue","white","orange","red"))
+
+pita_DE_verH_PN_FC_wide4 <- pita_DE_verH_PN_FC_wide3[,c("SN753", "SN677", "SN533", "SN529", "SN810", "SN520", "SN756", "SN579",  "SN508", "SN553", "SN503")]
+pheatmap(as.matrix(pita_DE_verH_PN_FC_wide4), na_col = "grey", fontsize_row = 0, fontsize_col = 14, breaks = c(-10,-1,0,1, 10), color = c("darkblue","lightblue","white","orange","red"))
+
+
+```
+
+pita_TT
+           Drug Cell line             p-value         Gene ratio
+1  Pitavastatin     SN553   0.999890998430004  0.132478632478632
+2  Pitavastatin     SN553   0.999890998430004  0.132478632478632
+3  Pitavastatin     SN528                   1 0.0213675213675214
+4  Pitavastatin     SN735   0.999999999999994  0.047008547008547
+5  Pitavastatin     SN667                   1 0.0128205128205128
+6  Pitavastatin     SN747                   1 0.0299145299145299
+7  Pitavastatin     SN756   0.999998031496166  0.111111111111111
+8  Pitavastatin     SN753 0.00534718689334892  0.299145299145299
+9  Pitavastatin     SN517                   1 0.0170940170940171
+10 Pitavastatin     SN575   0.998608336490767   0.14957264957265
+11 Pitavastatin     SN521                   1 0.0170940170940171
+12 Pitavastatin     SN810   0.745856951808384  0.209401709401709
+13 Pitavastatin     SN767                   1 0.0213675213675214
+14 Pitavastatin     SN533   0.993327169379671  0.162393162393162
+15 Pitavastatin     SN505   0.999999999999994  0.047008547008547
+16 Pitavastatin     SN677   0.837184731198376  0.200854700854701
+17 Pitavastatin     SN529   0.999999220471351  0.106837606837607
+18 Pitavastatin     SN534                   1                  0
+19 Pitavastatin     SN520  0.0656060721691387  0.269230769230769
+20 Pitavastatin     SN503   0.999999999695561 0.0769230769230769
+21 Pitavastatin     SN508    0.99997537762875  0.123931623931624
+22 Pitavastatin     SN674   0.999999999999967 0.0512820512820513
+23 Pitavastatin     SN649                   1 0.0170940170940171
+24 Pitavastatin     SN579   0.949095157216399  0.183760683760684
+
+```{r}
+#Pitavastatin
+
+cells_pitaLt <- unique(pita_comB_deG$Cellline)
+
+pita_comB_deG_listO <- rbind(length(unique(sn553_DE_pita$ENSEMBL)), length(unique(sn528_DE_pita$ENSEMBL)), length(unique(sn735_DE_pita$ENSEMBL)), length(unique(sn667_DE_pita$ENSEMBL)), length(unique(sn747_DE_pita$ENSEMBL)), length(unique(sn756_DE_pita$ENSEMBL)), length(unique(sn753_DE_pita$ENSEMBL)), length(unique(sn517_DE_pita$ENSEMBL)), length(unique(sn575_DE_pita$ENSEMBL)), length(unique(sn521_DE_pita$ENSEMBL)), length(unique(sn810_DE_pita$ENSEMBL)), length(unique(sn767_DE_pita$ENSEMBL)), length(unique(sn533_DE_pita$ENSEMBL)), length(unique(sn505_DE_pita$ENSEMBL)), length(unique(sn677_DE_pita$ENSEMBL)), length(unique(sn529_DE_pita$ENSEMBL)), length(unique(sn534_DE_pita$ENSEMBL)), length(unique(sn520_DE_pita$ENSEMBL)), length(unique(sn503_DE_pita$ENSEMBL)), length(unique(sn508_DE_pita$ENSEMBL)), length(unique(sn674_DE_pita$ENSEMBL)), length(unique(sn649_DE_pita$ENSEMBL)), length(unique(sn579_DE_pita$ENSEMBL)))
+
+for(g in 1:length(cells_pitaLt)){
+  Deg_TF <- pita_comB_deG %>% filter(Cellline %in% cells_pitaLt[g])
+  regVg_TF <- pita_comB_deG_listO[g,1]
+  comG <- pita_comB_deG %>% filter(ENSEMBL %in% verH_MES_geneL_id_mult$ENSEMBL & Cellline %in% cells_pitaLt[g])
+  intDEmesG <- length(comG$ENSEMBL)
+  overA = uniBk - regVg_TF 
+  inte = intDEmesG -1
+  pval_hper <- phyper(q = inte, m = regVg_TF, n = overA, k = modGL, lower.tail = FALSE )
+  gr_mes <- intDEmesG/modGL
+  hp_stat <- cbind("Pitavastatin", cells_pitaLt[g], pval_hper, gr_mes, regVg_TF, intDEmesG)
+  colnames(hp_stat) <- c("Drug","Cell line", "p-value","Gene ratio", "DiffG","Match")
+  des_mesT <- rbind(des_mesT, hp_stat)
+}
+  
+#disF_TT <-as.data.frame(des_mesT)
+
+```
+
+pita_TT %>% filter(`p-value` < 0.05)
+          Drug Cell line             p-value        Gene ratio
+1 Pitavastatin     SN753 0.00534718689334892 0.299145299145299
+
+pita_TT %>% filter(`Gene ratio` > 0.1)
+           Drug Cell line             p-value        Gene ratio
+1  Pitavastatin     SN553   0.999890998430004 0.132478632478632
+2  Pitavastatin     SN553   0.999890998430004 0.132478632478632
+3  Pitavastatin     SN756   0.999998031496166 0.111111111111111
+4  Pitavastatin     SN753 0.00534718689334892 0.299145299145299
+5  Pitavastatin     SN575   0.998608336490767  0.14957264957265
+6  Pitavastatin     SN810   0.745856951808384 0.209401709401709
+7  Pitavastatin     SN533   0.993327169379671 0.162393162393162
+8  Pitavastatin     SN677   0.837184731198376 0.200854700854701
+9  Pitavastatin     SN529   0.999999220471351 0.106837606837607
+10 Pitavastatin     SN520  0.0656060721691387 0.269230769230769
+11 Pitavastatin     SN508    0.99997537762875 0.123931623931624
+12 Pitavastatin     SN579   0.949095157216399 0.183760683760684
+
+
+
+
+
+
+3. ANALYZING CANCER HALLMARKS IN SIMVASTATIN TREATED SAMPLES
+
+```{r}
+##Only upregulated genes for enrichment
+DEgenes_simvO <- c()
+
+#resT_dir <- "/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal"
+#cells_sampM <- unique(meta_set1to6_allE2$Cell.Line)
+
+for(i in 1:length(cells_sampM)){
+  fil_DEres <- paste(resT_dir,cells_sampM[i],"DE_simvastatin.txt", sep="/")
+  
+  resF_simv <- read.table(fil_DEres, header = T) 
+  cell_DE_simv <- resF_simv %>% filter(padj < 0.05 & log2FoldChange > 1) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+  ltNam <- paste("simv",i, sep = "_")
+  DEgenes_simvO[[cells_sampM[i]]] <- list(ltNam = cell_DE_simv$ENSEMBL)
+  
+  }
+
+
+
+
+```
+
+
+
+```{r}
+
+SIMv_regsFuncAll <-c()
+SIMv_hallM <- c()
+
+cell_line_no <- length(DEgenes_simvO)
+
+for(i in 1:length(DEgenes_simvO)){
+  cell_name <- names(DEgenes_simvO)
+
+  DE_genes_simv <- DEgenes_simvO[[cell_name[i]]]$ltNam
+  
+  
+  ##Reactome
+  gen_ID_simv = bitr(DE_genes_simv, fromType="ENSEMBL", toType="ENTREZID", OrgDb="org.Hs.eg.db")
+  rct_simv <- enrichPathway(gene=gen_ID_simv$ENTREZID, pvalueCutoff = 0.05, readable=TRUE)
+ #head(x)
+
+  ##GO BP
+ego_simv <- enrichGO(gene   = gen_ID_simv$ENTREZID,
+                OrgDb  = org.Hs.eg.db,
+               ont  = "BP",
+               pAdjustMethod = "BH",
+               pvalueCutoff  = 0.01,
+               qvalueCutoff  = 0.05,
+               readable      = TRUE)
+
+
+go_mf_simv <- enrichGO(gene = gen_ID_simv$ENTREZID,
+                OrgDb = org.Hs.eg.db,
+               ont  = "MF",
+               pAdjustMethod = "BH",
+               pvalueCutoff  = 0.01,
+               qvalueCutoff  = 0.05,
+               readable      = TRUE)
+
+
+## KEGG
+
+kk_simv <- enrichKEGG(gene = gen_ID_simv$ENTREZID,
+                  organism   = 'hsa',
+                  pvalueCutoff = 0.05)
+
+#regID_ot <- regulonLst$Regulon.ID[i]
+
+## MsigDB hallmarks
+
+gen_sym_simv = bitr(DE_genes_simv, fromType="ENSEMBL", toType="SYMBOL", OrgDb="org.Hs.eg.db")
+
+riches_simv <- enricher(gene=gen_sym_simv$SYMBOL, TERM2GENE= h_t2g, pvalueCutoff = 0.05, minGSSize = 50, qvalueCutoff = 0.1, pAdjustMethod = "bonferroni" )
+hall_msig_simv <- as.data.frame(riches_simv)
+
+   kegg_rich_simv <- c()
+   React_rich_simv <- c()
+   gobp_rich_simv <- c()
+   gomf_rich_simv <- c()
+   hall_rich_simv <- c()
+   
+   if(!is.null(kk_simv)){
+   kegg_rich_simv <- cbind(cell_name[i],"Kegg", kk_simv[1:20,])
+   }
+   if(!is.null(rct_simv)){
+   React_rich_simv <- cbind(cell_name[i],"Reactome", rct_simv[1:20,])
+   }
+   if(!is.null(ego_simv)){
+   gobp_rich_simv <- cbind(cell_name[i],"GObp",ego_simv[1:20,])
+   }
+   if(!is.null(go_mf_simv)){
+     gomf_rich_simv <- cbind(cell_name[i],"GOmf",go_mf_simv[1:20,])
+   }
+   if(is.data.frame(hall_msig_simv) & nrow(hall_msig_simv) != 0){
+     
+     hall_rich_simv <- cbind(cell_name[i],"Msig_hall", hall_msig_simv)
+   }
+   
+   
+   if(!is.null(kegg_rich_simv)){
+   names(kegg_rich_simv) <- c("Cell_line","Category","Description", "GeneRatio", "BgRatio", "pvalue", "p.adjust", "qvalue", "geneID","Count")
+   }
+   if(!is.null(React_rich_simv)){
+   names(React_rich_simv) <- c("Cell_line","Category","Description", "GeneRatio", "BgRatio", "pvalue", "p.adjust", "qvalue", "geneID","Count")
+   }
+   if(!is.null(gobp_rich_simv)){
+   names(gobp_rich_simv) <- c("Cell_line","Category","Description", "GeneRatio", "BgRatio", "pvalue", "p.adjust", "qvalue", "geneID","Count")
+   }
+   if(is.data.frame(hall_msig_simv) & nrow(hall_msig_simv) != 0){
+    names(hall_rich_simv) <- c("Cell_line","Category","Description", "GeneRatio", "BgRatio", "pvalue", "p.adjust", "qvalue", "geneID","Count") 
+     
+   }
+   
+   SIMv_regsFuncAll <- rbind(SIMv_regsFuncAll, kegg_rich_simv, React_rich_simv, gobp_rich_simv)
+   SIMv_hallM <- rbind(SIMv_hallM, hall_rich_simv)
+}
+
+write.table(SIMv_regsFuncAll,"Res_gseaR/S1to6_EnrichPathst10_simvastatin.txt")
+write.table(SIMv_hallM, "Res_gseaR/S1to6_Msig_hallmark_simvastatin.txt" )
+
+
+```
+
+SUBSETTING EMT HALLMARK GENES AND CELL LINES EXHIBITING EMT (Simvastatin)
+
+#filtering criteria for cell lines showing EMT
+
+Gene ratio > 0.1 or gene count > 50
+
+```{r}
+
+simv_hall_rev <- read.table("Res_gseaR/S1to6_Msig_hallmark_simvastatin.txt", header = T)
+colnames(simv_hall_rev) <- c("Cell_line","Category","Description","Pathway","GeneRatio","BgRatio","pvalue","p.adjust","qvalue","geneID","Count")
+
+simv_hall_rev_filt <- simv_hall_rev %>% filter(Description == "HALLMARK_EPITHELIAL_MESENCHYMAL_TRANSITION" & p.adjust < 0.05) %>% separate(GeneRatio, sep = "/", into = c("GeneNo","CategoryNo")) %>% mutate(GRatio = as.numeric(GeneNo)/as.numeric(CategoryNo)) %>% filter(GRatio > 0.1 | Count > 50)
+
+simv_hall_rev_filt %>% select(Cell_line)
+
+```
+
+
+
+
+```{r}
+simv_hall_rev_filtA <- simv_hall_rev_filt %>% mutate(gene_list = str_replace_all(geneID, "/", ",")) %>% select(Cell_line, gene_list)
+
+simv_hall_rev_filtB <- simv_hall_rev_filtA %>% separate_rows(gene_list)
+
+simv_hall_rev_geneL <- unique(simv_hall_rev_filtB$gene_list)
+
+
+```
+
+COMBINING FILTERED DE GENE RESULTS
+
+```{r}
+
+
+sn503_DE_simv <- sn503_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN503")
+
+sn505_DE_simv <- sn505_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN505")
+
+sn508_DE_simv <- sn508_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN508")
+
+sn520_DE_simv <- sn520_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN520")
+
+sn533_DE_simv <- sn533_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN533")
+
+sn575_DE_simv <- sn575_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN575")
+
+sn579_DE_simv <- sn579_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN579")
+
+sn674_DE_simv <- sn674_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN674")
+
+sn677_DE_simv <- sn677_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN677")
+
+sn753_DE_simv <- sn753_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN753")
+
+sn756_DE_simv <- sn756_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN756")
+
+
+sn810_DE_simv <- sn810_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN810")
+
+sn517_DE_simv <- sn517_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN517")
+
+
+sn521_DE_simv <- sn521_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN521")
+
+sn528_DE_simv <- sn528_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN528")
+
+sn529_DE_simv <- sn529_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN529")
+
+sn534_DE_simv <- sn534_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN534")
+
+sn553_DE_simv <- sn553_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN553")
+
+sn649_DE_simv <- sn649_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN649")
+
+sn667_DE_simv <- sn667_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN667")
+
+sn735_DE_simv <- sn735_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN735")
+
+sn747_DE_simv <- sn747_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN747")
+
+
+sn767_DE_simv <- sn767_sim %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN767")
+
+
+simv_comB_deG <- rbind(sn553_DE_simv, sn528_DE_simv, sn735_DE_simv, sn667_DE_simv, sn747_DE_simv, sn756_DE_simv, sn753_DE_simv, sn517_DE_simv, sn575_DE_simv, sn521_DE_simv, sn810_DE_simv, sn767_DE_simv, sn533_DE_simv, sn505_DE_simv, sn677_DE_simv, sn529_DE_simv, sn534_DE_simv, sn520_DE_simv, sn503_DE_simv, sn508_DE_simv, sn674_DE_simv, sn649_DE_simv, sn579_DE_simv)
+
+```
+
+OBSERVING FOLD CHANGE
+
+```{r}
+## EMT hallmark genes
+simv_hall_rev_geneL_id_mult <- bitr(simv_hall_rev_geneL, fromType="SYMBOL", toType=c("ENTREZID", "ENSEMBL","GENENAME"), OrgDb="org.Hs.eg.db")
+
+simv_DE_EMTg_FC <- simv_comB_deG %>% filter(Cellline %in% simv_hall_rev_filt$Cell_line & ENSEMBL %in% simv_hall_rev_geneL_id_mult$ENSEMBL)
+
+simv_DE_EMTg_FC_wide <- simv_DE_EMTg_FC %>% select(ENSEMBL,log2FoldChange, Cellline) %>%pivot_wider(names_from = Cellline, values_from = log2FoldChange)
+
+simv_DE_EMTg_FC_wide2 <- as.data.frame(simv_DE_EMTg_FC_wide)
+rownames(simv_DE_EMTg_FC_wide2) <- simv_DE_EMTg_FC_wide2$ENSEMBL
+
+
+simv_DE_EMTg_FC_wide3 <- simv_DE_EMTg_FC_wide2[,2]
+simv_DE_EMTg_FC_wide3[is.na(simv_DE_EMTg_FC_wide3)] <- 0
+
+pheatmap(as.matrix(simv_DE_EMTg_FC_wide3), na_col = "grey", fontsize_row = 0, fontsize_col = 14, breaks = c(-15,-1,0,1, 15), color = c("darkblue","lightblue","white","orange","red"))
+
+```
+
+OBSERVING NEFTEL MARKER GENES EXPRESSION
+
+```{r}
+## Neftel marker genes
+
+#neftelM_geneL_id_mult <- bitr(neftel_markMES, fromType="SYMBOL", toType=c("ENTREZID", "ENSEMBL","GENENAME"), OrgDb="org.Hs.eg.db")
+
+simv_DE_Neftelg_FC <- simv_comB_deG %>% filter(ENSEMBL %in% neftelM_geneL_id_mult$ENSEMBL)
+
+simv_DE_Neftelg_FC_wide <- simv_DE_Neftelg_FC %>% select(SYMBOL,log2FoldChange, Cellline) %>%pivot_wider(names_from = Cellline, values_from = log2FoldChange)
+
+simv_DE_Neftelg_FC_wide2 <- as.data.frame(simv_DE_Neftelg_FC_wide)
+rownames(simv_DE_Neftelg_FC_wide2) <- simv_DE_Neftelg_FC_wide2$SYMBOL
+
+
+simv_DE_Neftelg_FC_wide3 <- simv_DE_Neftelg_FC_wide2[,-1]
+simv_DE_Neftelg_FC_wide3[is.na(simv_DE_Neftelg_FC_wide3)] <- 0
+
+pheatmap(as.matrix(simv_DE_Neftelg_FC_wide3), na_col = "grey", fontsize_row = 0, fontsize_col = 14, breaks = c(-10,-1,0,1, 10), color = c("darkblue","lightblue","white","orange","red"))
+
+
+
+```
+
+
+
+```{r}
+
+
+simv_DE_verH_PN_FC <- simv_comB_deG %>% filter(ENSEMBL %in% verH_PN_geneL_id_mult$ENSEMBL)
+
+simv_DE_verH_PN_FC_wide <- simv_DE_verH_PN_FC %>% select(SYMBOL,log2FoldChange, Cellline) %>%pivot_wider(names_from = Cellline, values_from = log2FoldChange)
+
+simv_DE_verH_PN_FC_wide2 <- as.data.frame(simv_DE_verH_PN_FC_wide)
+rownames(simv_DE_verH_PN_FC_wide2) <- simv_DE_verH_PN_FC_wide2$SYMBOL
+
+
+simv_DE_verH_PN_FC_wide3 <- simv_DE_verH_PN_FC_wide2[,-1]
+simv_DE_verH_PN_FC_wide3[is.na(simv_DE_verH_PN_FC_wide3)] <- 0
+
+pheatmap(as.matrix(simv_DE_verH_PN_FC_wide3), na_col = "grey", fontsize_row = 0, fontsize_col = 14, breaks = c(-10,-1,0,1, 10), color = c("darkblue","lightblue","white","orange","red"))
+
+
+```
+
+
+```{r}
+
+#PN to MES sel cell lines
+#SN533, SN677, SN575, SN735, SN810, SN520, SN753, SN529, SN579 
+
+
+simv_DE_verH_MES_FC <- simv_comB_deG %>% filter(ENSEMBL %in% verH_MES_geneL_id_mult$ENSEMBL)
+
+simv_DE_verH_MES_FC_wide <- pita_DE_verH_MES_FC %>% filter(Cellline %in% c("SN677", "SN575", "SN810", "SN520", "SN753", "SN579" )) %>% select(SYMBOL,log2FoldChange, Cellline) %>%pivot_wider(names_from = Cellline, values_from = log2FoldChange)
+
+simv_DE_verH_MES_FC_wide2 <- as.data.frame(simv_DE_verH_MES_FC_wide)
+rownames(simv_DE_verH_MES_FC_wide2) <- simv_DE_verH_MES_FC_wide2$SYMBOL
+
+
+simv_DE_verH_MES_FC_wide3 <- simv_DE_verH_MES_FC_wide2[,-1]
+simv_DE_verH_MES_FC_wide3[is.na(simv_DE_verH_MES_FC_wide3)] <- 0
+
+pheatmap(as.matrix(simv_DE_verH_MES_FC_wide3), na_col = "grey", fontsize_row = 0, fontsize_col = 14, breaks = c(-10,-1,0,1, 10), color = c("darkblue","lightblue","white","orange","red"))
+
+simv_DE_verH_PN_FC_wide4 <- simv_DE_verH_PN_FC_wide3[,c("SN677", "SN575", "SN810", "SN520", "SN753", "SN579")]
+pheatmap(as.matrix(simv_DE_verH_PN_FC_wide4), na_col = "grey", fontsize_row = 0, fontsize_col = 14, breaks = c(-10,-1,0,1, 10), color = c("darkblue","lightblue","white","orange","red"))
+
+
+
+```
+
+
+simv_TT
+          Drug Cell line            p-value          Gene ratio
+1  Simvastatin     SN579  0.999999999998873  0.0256410256410256
+2  Simvastatin     SN553  0.999999999998873  0.0256410256410256
+3  Simvastatin     SN528  0.999999999998873  0.0256410256410256
+4  Simvastatin     SN735  0.999999999999999  0.0128205128205128
+5  Simvastatin     SN667  0.999999999999999  0.0128205128205128
+6  Simvastatin     SN747                  1 0.00854700854700855
+7  Simvastatin     SN756  0.999999999942911  0.0341880341880342
+8  Simvastatin     SN753  0.177624138188534   0.188034188034188
+9  Simvastatin     SN517                  1 0.00854700854700855
+10 Simvastatin     SN575  0.999249732282254   0.094017094017094
+11 Simvastatin     SN521  0.999999999942911  0.0341880341880342
+12 Simvastatin     SN810 0.0546665577249249   0.205128205128205
+13 Simvastatin     SN767                  1 0.00427350427350427
+14 Simvastatin     SN533  0.887841796711451   0.136752136752137
+15 Simvastatin     SN505  0.999999999999999  0.0128205128205128
+16 Simvastatin     SN677  0.408588274275283   0.170940170940171
+17 Simvastatin     SN529  0.999999992433513   0.047008547008547
+18 Simvastatin     SN520  0.746131149443698    0.14957264957265
+19 Simvastatin     SN503  0.999999999998873  0.0256410256410256
+20 Simvastatin     SN508  0.999999999942911  0.0341880341880342
+21 Simvastatin     SN674   0.99999999967271  0.0384615384615385
+22 Simvastatin     SN649   0.99999999999999  0.0170940170940171
+23 Simvastatin     SN579  0.999971578012812  0.0769230769230769
+
+
+```{r}
+
+#Simvastatin
+
+cells_simvLt <- unique(simv_comB_deG$Cellline)
+
+simv_comB_deG_listO <- rbind(length(unique(sn553_DE_simv$ENSEMBL)), length(unique(sn528_DE_simv$ENSEMBL)), length(unique(sn735_DE_simv$ENSEMBL)), length(unique(sn667_DE_simv$ENSEMBL)), length(unique(sn747_DE_simv$ENSEMBL)), length(unique(sn756_DE_simv$ENSEMBL)), length(unique(sn753_DE_simv$ENSEMBL)), length(unique(sn517_DE_simv$ENSEMBL)), length(unique(sn575_DE_simv$ENSEMBL)), length(unique(sn521_DE_simv$ENSEMBL)), length(unique(sn810_DE_simv$ENSEMBL)), length(unique(sn767_DE_simv$ENSEMBL)), length(unique(sn533_DE_simv$ENSEMBL)), length(unique(sn505_DE_simv$ENSEMBL)), length(unique(sn677_DE_simv$ENSEMBL)), length(unique(sn529_DE_simv$ENSEMBL)), length(unique(sn520_DE_simv$ENSEMBL)), length(unique(sn503_DE_simv$ENSEMBL)), length(unique(sn508_DE_simv$ENSEMBL)), length(unique(sn674_DE_simv$ENSEMBL)), length(unique(sn649_DE_simv$ENSEMBL)), length(unique(sn579_DE_simv$ENSEMBL)))
+
+for(g in 1:length(cells_simvLt)){
+  Deg_TF <- simv_comB_deG %>% filter(Cellline %in% cells_simvLt[g])
+  regVg_TF <- simv_comB_deG_listO[g,1]
+  comG <- simv_comB_deG %>% filter(ENSEMBL %in% verH_MES_geneL_id_mult$ENSEMBL & Cellline %in% cells_simvLt[g])
+  intDEmesG <- length(comG$ENSEMBL)
+  overA = uniBk - regVg_TF 
+  inte = intDEmesG -1
+  pval_hper <- phyper(q = inte, m = regVg_TF, n = overA, k = modGL, lower.tail = FALSE )
+  gr_mes <- intDEmesG/modGL
+  hp_stat <- cbind("Simvastatin", cells_simvLt[g], pval_hper, gr_mes, regVg_TF, intDEmesG)
+  colnames(hp_stat) <- c("Drug","Cell line", "p-value","Gene ratio", "DiffG","Match")
+  des_mesT <- rbind(des_mesT, hp_stat)
+}
+  
+#disF_TT <-as.data.frame(des_mesT)
+
+
+```
+
+
+simv_TT %>% filter(`p-value` < 0.1)
+         Drug Cell line            p-value        Gene ratio
+1 Simvastatin     SN810 0.0546665577249249 0.205128205128205
+
+simv_TT %>% filter(`Gene ratio` > 0.1)
+         Drug Cell line            p-value        Gene ratio
+1 Simvastatin     SN753  0.177624138188534 0.188034188034188
+2 Simvastatin     SN810 0.0546665577249249 0.205128205128205
+3 Simvastatin     SN533  0.887841796711451 0.136752136752137
+4 Simvastatin     SN677  0.408588274275283 0.170940170940171
+5 Simvastatin     SN520  0.746131149443698  0.14957264957265
+
+
+4. ANALYZING CANCER HALLMARKS IN MITOXANTRONE TREATED SAMPLES
+
+
+```{r}
+##Hallmark for UP genes only
+DEgenes_mitxO <- c()
+
+#resT_dir <- "/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal"
+#cells_sampM <- unique(meta_set1to6_allE2$Cell.Line)
+
+for(i in 1:length(cells_sampM)){
+  fil_DEres <- paste(resT_dir,cells_sampM[i],"DE_mitoxantrone.txt", sep="/")
+  
+  resF_mitx <- read.table(fil_DEres, header = T) 
+  cell_DE_mitx <- resF_mitx %>% filter(padj < 0.05 & log2FoldChange > 1) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+  ltNam <- paste("mitx",i, sep = "_")
+  DEgenes_mitxO[[cells_sampM[i]]] <- list(ltNam = cell_DE_mitx$ENSEMBL)
+  
+  }
+
+
+
+
+
+```
+
+
+
+```{r}
+
+Mitx_regsFuncAll <-c()
+Mitx_hallM <- c()
+
+cell_line_no <- length(DEgenes_mitxO)
+
+for(i in 1:length(DEgenes_mitxO)){
+  cell_name <- names(DEgenes_mitxO)
+
+  DE_genes_mitx <- DEgenes_mitxO[[cell_name[i]]]$ltNam
+  
+  
+  ##Reactome
+  gen_ID_mitx = bitr(DE_genes_mitx, fromType="ENSEMBL", toType="ENTREZID", OrgDb="org.Hs.eg.db")
+  rct_mitx <- enrichPathway(gene=gen_ID_mitx$ENTREZID, pvalueCutoff = 0.05, readable=TRUE)
+ #head(x)
+
+  ##GO BP
+ego_mitx <- enrichGO(gene   = gen_ID_mitx$ENTREZID,
+                OrgDb  = org.Hs.eg.db,
+               ont  = "BP",
+               pAdjustMethod = "BH",
+               pvalueCutoff  = 0.01,
+               qvalueCutoff  = 0.05,
+               readable      = TRUE)
+
+
+go_mf_mitx <- enrichGO(gene = gen_ID_mitx$ENTREZID,
+                OrgDb = org.Hs.eg.db,
+               ont  = "MF",
+               pAdjustMethod = "BH",
+               pvalueCutoff  = 0.01,
+               qvalueCutoff  = 0.05,
+               readable      = TRUE)
+
+
+## KEGG
+
+kk_mitx <- enrichKEGG(gene = gen_ID_mitx$ENTREZID,
+                  organism   = 'hsa',
+                  pvalueCutoff = 0.05)
+
+#regID_ot <- regulonLst$Regulon.ID[i]
+
+## MsigDB hallmarks
+
+gen_sym_mitx = bitr(DE_genes_mitx, fromType="ENSEMBL", toType="SYMBOL", OrgDb="org.Hs.eg.db")
+
+riches_mitx <- enricher(gene=gen_sym_mitx$SYMBOL, TERM2GENE= h_t2g, pvalueCutoff = 0.05, minGSSize = 50, qvalueCutoff = 0.1, pAdjustMethod = "bonferroni" )
+hall_msig_mitx <- as.data.frame(riches_mitx)
+
+   kegg_rich_mitx <- c()
+   React_rich_mitx <- c()
+   gobp_rich_mitx <- c()
+   gomf_rich_mitx <- c()
+   hall_rich_mitx <- c()
+   
+   if(!is.null(kk_mitx)){
+   kegg_rich_mitx <- cbind(cell_name[i],"Kegg", kk_mitx[1:20,])
+   }
+   if(!is.null(rct_mitx)){
+   React_rich_mitx <- cbind(cell_name[i],"Reactome", rct_mitx[1:20,])
+   }
+   if(!is.null(ego_mitx)){
+   gobp_rich_mitx <- cbind(cell_name[i],"GObp",ego_mitx[1:20,])
+   }
+   if(!is.null(go_mf_mitx)){
+     gomf_rich_mitx <- cbind(cell_name[i],"GOmf",go_mf_mitx[1:20,])
+   }
+   if(is.data.frame(hall_msig_mitx) & nrow(hall_msig_mitx) != 0){
+     
+     hall_rich_mitx <- cbind(cell_name[i],"Msig_hall", hall_msig_mitx)
+   }
+   
+   
+   if(!is.null(kegg_rich_mitx)){
+   names(kegg_rich_mitx) <- c("Cell_line","Category","Description", "GeneRatio", "BgRatio", "pvalue", "p.adjust", "qvalue", "geneID","Count")
+   }
+   if(!is.null(React_rich_mitx)){
+   names(React_rich_mitx) <- c("Cell_line","Category","Description", "GeneRatio", "BgRatio", "pvalue", "p.adjust", "qvalue", "geneID","Count")
+   }
+   if(!is.null(gobp_rich_mitx)){
+   names(gobp_rich_mitx) <- c("Cell_line","Category","Description", "GeneRatio", "BgRatio", "pvalue", "p.adjust", "qvalue", "geneID","Count")
+   }
+   if(is.data.frame(hall_msig_mitx) & nrow(hall_msig_mitx) != 0){
+    names(hall_rich_mitx) <- c("Cell_line","Category","Description", "GeneRatio", "BgRatio", "pvalue", "p.adjust", "qvalue", "geneID","Count") 
+     
+   }
+   
+   Mitx_regsFuncAll <- rbind(Mitx_regsFuncAll, kegg_rich_mitx, React_rich_mitx, gobp_rich_mitx)
+   Mitx_hallM <- rbind(Mitx_hallM, hall_rich_mitx)
+}
+
+
+write.table(Mitx_regsFuncAll,"Res_gseaR/S1to6_EnrichPathst10_mitoxantrone.txt")
+write.table(Mitx_hallM, "Res_gseaR/S1to6_Msig_hallmark_mitoxantrone.txt" )
+
+
+
+
+```
+
+SUBSETTING EMT HALLMARK GENES AND CELL LINES EXHIBITING EMT (Mitoxantrone)
+
+#filtering criteria for cell lines showing EMT
+
+Gene ratio > 0.1 or gene count > 50
+
+```{r}
+
+mitx_hall_rev <- read.table("Res_gseaR/S1to6_Msig_hallmark_mitoxantrone.txt", header = T)
+colnames(mitx_hall_rev) <- c("Cell_line","Category","Description","Pathway","GeneRatio","BgRatio","pvalue","p.adjust","qvalue","geneID","Count")
+
+mitx_hall_rev_filt <- mitx_hall_rev %>% filter(Description == "HALLMARK_EPITHELIAL_MESENCHYMAL_TRANSITION" & p.adjust < 0.05) %>% separate(GeneRatio, sep = "/", into = c("GeneNo","CategoryNo")) %>% mutate(GRatio = as.numeric(GeneNo)/as.numeric(CategoryNo)) %>% filter(GRatio > 0.1 | Count > 50)
+
+mitx_hall_rev_filt %>% select(Cell_line)
+
+mitx_hall_rev_filtA <- mitx_hall_rev_filt %>% mutate(gene_list = str_replace_all(geneID, "/", ",")) %>% select(Cell_line, gene_list)
+
+mitx_hall_rev_filtB <- mitx_hall_rev_filtA %>% separate_rows(gene_list)
+
+mitx_hall_rev_geneL <- unique(mitx_hall_rev_filtB$gene_list)
+
+```
+
+
+```{r}
+
+sn503_DE_mitx <- sn503_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN503")
+
+sn505_DE_mitx <- sn505_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN505")
+
+sn508_DE_mitx <- sn508_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN508")
+
+sn520_DE_mitx <- sn520_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN520")
+
+
+sn533_DE_mitx <- sn533_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN533")
+
+
+sn575_DE_mitx <- sn575_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN575")
+
+sn579_DE_mitx <- sn579_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN579")
+
+sn674_DE_mitx <- sn674_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN674")
+
+sn677_DE_mitx <- sn677_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN677")
+
+sn753_DE_mitx <- sn753_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN753")
+
+sn756_DE_mitx <- sn756_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN756")
+
+sn810_DE_mitx <- sn810_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN810")
+
+
+sn517_DE_mitx <- sn517_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN517")
+
+
+sn521_DE_mitx <- sn521_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN521")
+
+
+sn528_DE_mitx <- sn528_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN528")
+
+
+sn529_DE_mitx <- sn529_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN529")
+
+
+sn534_DE_mitx <- sn534_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN534")
+
+sn553_DE_mitx <- sn553_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN553")
+
+
+sn649_DE_mitx <- sn649_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN649")
+
+
+sn667_DE_mitx <- sn667_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN667")
+
+
+sn735_DE_mitx <- sn735_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN735")
+
+
+sn747_DE_mitx <- sn747_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN747")
+
+
+sn767_DE_mitx <- sn767_mitx %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN767")
+
+mitx_comB_deG <- rbind(sn553_DE_mitx, sn528_DE_mitx, sn735_DE_mitx, sn667_DE_mitx, sn747_DE_mitx, sn756_DE_mitx, sn753_DE_mitx, sn517_DE_mitx, sn575_DE_mitx, sn521_DE_mitx, sn810_DE_mitx, sn767_DE_mitx, sn533_DE_mitx, sn505_DE_mitx, sn677_DE_mitx, sn529_DE_mitx, sn534_DE_mitx, sn520_DE_mitx, sn503_DE_mitx, sn508_DE_mitx, sn674_DE_mitx, sn649_DE_mitx, sn579_DE_mitx)
+
+```
+
+
+```{r}
+
+## EMT hallmark genes
+mitx_hall_rev_geneL_id_mult <- bitr(mitx_hall_rev_geneL, fromType="SYMBOL", toType=c("ENTREZID", "ENSEMBL","GENENAME"), OrgDb="org.Hs.eg.db")
+
+mitx_DE_EMTg_FC <- mitx_comB_deG %>% filter(Cellline %in% mitx_hall_rev_filt$Cell_line & ENSEMBL %in% mitx_hall_rev_geneL_id_mult$ENSEMBL)
+
+mitx_DE_EMTg_FC_wide <- mitx_DE_EMTg_FC %>% select(ENSEMBL,log2FoldChange, Cellline) %>%pivot_wider(names_from = Cellline, values_from = log2FoldChange)
+
+mitx_DE_EMTg_FC_wide2 <- as.data.frame(mitx_DE_EMTg_FC_wide)
+rownames(mitx_DE_EMTg_FC_wide2) <- mitx_DE_EMTg_FC_wide2$ENSEMBL
+
+
+mitx_DE_EMTg_FC_wide3 <- mitx_DE_EMTg_FC_wide2[,-1]
+mitx_DE_EMTg_FC_wide3[is.na(mitx_DE_EMTg_FC_wide3)] <- 0
+
+pheatmap(as.matrix(mitx_DE_EMTg_FC_wide3), na_col = "grey", fontsize_row = 0, fontsize_col = 14, breaks = c(-10,-1,0,1, 10), color = c("darkblue","lightblue","white","orange","red"))
+
+
+```
+
+
+```{r}
+
+## Neftel marker genes
+
+#neftelM_geneL_id_mult <- bitr(neftel_markMES, fromType="SYMBOL", toType=c("ENTREZID", "ENSEMBL","GENENAME"), OrgDb="org.Hs.eg.db")
+
+mitx_DE_Neftelg_FC <- mitx_comB_deG %>% filter(ENSEMBL %in% neftelM_geneL_id_mult$ENSEMBL)
+
+mitx_DE_Neftelg_FC_wide <- mitx_DE_Neftelg_FC %>% select(SYMBOL,log2FoldChange, Cellline) %>%pivot_wider(names_from = Cellline, values_from = log2FoldChange)
+
+mitx_DE_Neftelg_FC_wide2 <- as.data.frame(mitx_DE_Neftelg_FC_wide)
+rownames(mitx_DE_Neftelg_FC_wide2) <- mitx_DE_Neftelg_FC_wide2$SYMBOL
+
+
+mitx_DE_Neftelg_FC_wide3 <- mitx_DE_Neftelg_FC_wide2[,-1]
+mitx_DE_Neftelg_FC_wide3[is.na(mitx_DE_Neftelg_FC_wide3)] <- 0
+
+pheatmap(as.matrix(mitx_DE_Neftelg_FC_wide3), na_col = "grey", fontsize_row = 0, fontsize_col = 14, breaks = c(-10,-1,0,1, 10), color = c("darkblue","lightblue","white","orange","red"))
+
+
+
+
+```
+
+
+```{r}
+#SN767, SN575, SN521
+
+mitx_DE_verHPN_FC <- mitx_comB_deG %>% filter(ENSEMBL %in% verH_PN_geneL_id_mult$ENSEMBL)
+
+mitx_DE_verHPN_FC_wide <- mitx_DE_verHPN_FC %>% select(SYMBOL,log2FoldChange, Cellline) %>%pivot_wider(names_from = Cellline, values_from = log2FoldChange)
+
+mitx_DE_verHPN_FC_wide2 <- as.data.frame(mitx_DE_verHPN_FC_wide)
+rownames(mitx_DE_verHPN_FC_wide2) <- mitx_DE_verHPN_FC_wide2$SYMBOL
+
+
+mitx_DE_verHPN_FC_wide3 <- mitx_DE_verHPN_FC_wide2[,-1]
+mitx_DE_verHPN_FC_wide3[is.na(mitx_DE_verHPN_FC_wide3)] <- 0
+
+pheatmap(as.matrix(mitx_DE_verHPN_FC_wide3), na_col = "grey", fontsize_row = 0, fontsize_col = 14, breaks = c(-10,-1,0,1, 10), color = c("darkblue","lightblue","white","orange","red"))
+
+
+```
+
+```{r}
+#SN767, SN575, SN521, SN505, SN508, SN533, SN520
+
+#selected cell lines showing PN-MES
+#verH_MES_geneL_id_mult <- bitr(verH_mes2, fromType="SYMBOL", toType=c("ENTREZID", "ENSEMBL","GENENAME"), OrgDb="org.Hs.eg.db")
+
+mitx_DE_verH_MES_FC <- mitx_comB_deG %>% filter(ENSEMBL %in% verH_MES_geneL_id_mult$ENSEMBL)
+
+mitx_DE_verH_MES_FC_wide <- mitx_DE_verH_MES_FC %>% filter(Cellline %in% c("SN767", "SN575", "SN521", "SN505", "SN508", "SN533", "SN520")) %>%select(SYMBOL,log2FoldChange, Cellline) %>% pivot_wider(names_from = Cellline, values_from = log2FoldChange)
+
+mitx_DE_verH_MES_FC_wide2 <- as.data.frame(mitx_DE_verH_MES_FC_wide)
+rownames(mitx_DE_verH_MES_FC_wide2) <- mitx_DE_verH_MES_FC_wide2$SYMBOL
+
+
+mitx_DE_verH_MES_FC_wide3 <- mitx_DE_verH_MES_FC_wide2[,-1]
+mitx_DE_verH_MES_FC_wide3[is.na(mitx_DE_verH_MES_FC_wide3)] <- 0
+
+pheatmap(as.matrix(mitx_DE_verH_MES_FC_wide3), na_col = "grey", fontsize_row = 0, fontsize_col = 14, breaks = c(-10,-1,0,1, 10), color = c("darkblue","lightblue","white","orange","red"))
+
+mitx_DE_verHPN_FC_wide4 <- mitx_DE_verHPN_FC_wide3[,c("SN767", "SN575", "SN521", "SN505", "SN508", "SN533", "SN520")]
+
+pheatmap(as.matrix(mitx_DE_verHPN_FC_wide4), na_col = "grey", fontsize_row = 0, fontsize_col = 14, breaks = c(-10,-1,0,1, 10), color = c("darkblue","lightblue","white","orange","red"))
+
+```
+
+
+mitx_TT
+           Drug Cell line              p-value          Gene ratio
+1  Mitoxantrone     SN553                    1                   0
+2  Mitoxantrone     SN553                    1                   0
+3  Mitoxantrone     SN528    0.999999998776067  0.0256410256410256
+4  Mitoxantrone     SN735                    1                   0
+5  Mitoxantrone     SN667    0.999997333504919   0.047008547008547
+6  Mitoxantrone     SN747                    1                   0
+7  Mitoxantrone     SN756    0.999999819375845  0.0384615384615385
+8  Mitoxantrone     SN753    0.999999999834519  0.0213675213675214
+9  Mitoxantrone     SN517    0.999999960540877  0.0341880341880342
+10 Mitoxantrone     SN575  0.00789065468442144   0.192307692307692
+11 Mitoxantrone     SN521 0.000530669735177233   0.213675213675214
+12 Mitoxantrone     SN810    0.999999999999923 0.00854700854700855
+13 Mitoxantrone     SN767     0.40819971731735   0.141025641025641
+14 Mitoxantrone     SN533    0.213037711409992   0.153846153846154
+15 Mitoxantrone     SN505    0.999546683174338  0.0683760683760684
+16 Mitoxantrone     SN677    0.911322998025368   0.106837606837607
+17 Mitoxantrone     SN529    0.999999819375845  0.0384615384615385
+18 Mitoxantrone     SN534                    1                   0
+19 Mitoxantrone     SN520    0.911322998025368   0.106837606837607
+20 Mitoxantrone     SN503    0.999999999999998 0.00427350427350427
+21 Mitoxantrone     SN508    0.999973473191282  0.0555555555555556
+22 Mitoxantrone     SN674    0.999973473191282  0.0555555555555556
+23 Mitoxantrone     SN649    0.999999960540877  0.0341880341880342
+24 Mitoxantrone     SN579                    1                   0
+
+```{r}
+
+#Mitoxantrone
+
+cells_mitxLt <- unique(mitx_comB_deG$Cellline)
+
+mitx_comB_deG_listO <- rbind(length(unique(sn553_DE_mitx$ENSEMBL)), length(unique(sn528_DE_mitx$ENSEMBL)), length(unique(sn735_DE_mitx$ENSEMBL)), length(unique(sn667_DE_mitx$ENSEMBL)), length(unique(sn747_DE_mitx$ENSEMBL)), length(unique(sn756_DE_mitx$ENSEMBL)), length(unique(sn753_DE_mitx$ENSEMBL)), length(unique(sn517_DE_mitx$ENSEMBL)), length(unique(sn575_DE_mitx$ENSEMBL)), length(unique(sn521_DE_mitx$ENSEMBL)), length(unique(sn810_DE_mitx$ENSEMBL)), length(unique(sn767_DE_mitx$ENSEMBL)), length(unique(sn533_DE_mitx$ENSEMBL)), length(unique(sn505_DE_mitx$ENSEMBL)), length(unique(sn677_DE_mitx$ENSEMBL)), length(unique(sn529_DE_mitx$ENSEMBL)), length(unique(sn534_DE_mitx$ENSEMBL)), length(unique(sn520_DE_mitx$ENSEMBL)), length(unique(sn503_DE_mitx$ENSEMBL)), length(unique(sn508_DE_mitx$ENSEMBL)), length(unique(sn674_DE_mitx$ENSEMBL)), length(unique(sn649_DE_mitx$ENSEMBL)), length(unique(sn579_DE_mitx$ENSEMBL)))
+
+for(g in 1:length(cells_mitxLt)){
+  Deg_TF <- mitx_comB_deG %>% filter(Cellline %in% cells_mitxLt[g])
+  regVg_TF <- mitx_comB_deG_listO[g,1]
+  comG <- mitx_comB_deG %>% filter(ENSEMBL %in% verH_MES_geneL_id_mult$ENSEMBL & Cellline %in% cells_mitxLt[g])
+  intDEmesG <- length(comG$ENSEMBL)
+  overA = uniBk - regVg_TF 
+  inte = intDEmesG -1
+  pval_hper <- phyper(q = inte, m = regVg_TF, n = overA, k = modGL, lower.tail = FALSE )
+  gr_mes <- intDEmesG/modGL
+  hp_stat <- cbind("Mitoxantrone", cells_mitxLt[g], pval_hper, gr_mes, regVg_TF, intDEmesG)
+  colnames(hp_stat) <- c("Drug","Cell line", "p-value","Gene ratio","DiffG","Match")
+  des_mesT <- rbind(des_mesT, hp_stat)
+}
+  
+#disF_TT <-as.data.frame(des_mesT)
+
+```
+
+
+mitx_TT %>% filter(`p-value` < 0.05)
+          Drug Cell line              p-value        Gene ratio
+1 Mitoxantrone     SN575  0.00789065468442144 0.192307692307692
+2 Mitoxantrone     SN521 0.000530669735177233 0.213675213675214
+
+mitx_TT %>% filter(`Gene ratio` > 0.1)
+          Drug Cell line              p-value        Gene ratio
+1 Mitoxantrone     SN575  0.00789065468442144 0.192307692307692
+2 Mitoxantrone     SN521 0.000530669735177233 0.213675213675214
+3 Mitoxantrone     SN767     0.40819971731735 0.141025641025641
+4 Mitoxantrone     SN533    0.213037711409992 0.153846153846154
+5 Mitoxantrone     SN677    0.911322998025368 0.106837606837607
+6 Mitoxantrone     SN520    0.911322998025368 0.106837606837607
+
+4. ANALYZING CANCER HALLMARKS IN AURANOFIN TREATED SAMPLES #check code & run
+
+
+```{r}
+##Hallmark for UP genes only
+DEgenes_arfO <- c()
+
+#resT_dir <- "/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal"
+#cells_sampM <- unique(meta_set1to6_allE2$Cell.Line)
+
+for(i in 1:length(cells_sampM)){
+  fil_DEres <- paste(resT_dir,cells_sampM[i],"DE_auranofin.txt", sep="/")
+  
+  resF_arf <- read.table(fil_DEres, header = T) 
+  cell_DE_arf <- resF_arf %>% filter(padj < 0.05 & log2FoldChange > 1) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+  ltNam <- paste("arf",i, sep = "_")
+  DEgenes_arfO[[cells_sampM[i]]] <- list(ltNam = cell_DE_arf$ENSEMBL)
+  
+  }
+
+
+
+
+
+```
+
+
+
+```{r}
+
+arf_regsFuncAll <-c()
+arf_hallM <- c()
+
+cell_line_no <- length(DEgenes_arfO)
+
+for(i in 1:length(DEgenes_arfO)){
+  cell_name <- names(DEgenes_arfO)
+
+  DE_genes_arf <- DEgenes_arfO[[cell_name[i]]]$ltNam
+  
+  
+  ##Reactome
+  gen_ID_arf = bitr(DE_genes_arf, fromType="ENSEMBL", toType="ENTREZID", OrgDb="org.Hs.eg.db")
+  rct_arf <- enrichPathway(gene=gen_ID_arf$ENTREZID, pvalueCutoff = 0.05, readable=TRUE)
+ #head(x)
+
+  ##GO BP
+ego_arf <- enrichGO(gene   = gen_ID_arf$ENTREZID,
+                OrgDb  = org.Hs.eg.db,
+               ont  = "BP",
+               pAdjustMethod = "BH",
+               pvalueCutoff  = 0.01,
+               qvalueCutoff  = 0.05,
+               readable      = TRUE)
+
+
+go_mf_arf <- enrichGO(gene = gen_ID_arf$ENTREZID,
+                OrgDb = org.Hs.eg.db,
+               ont  = "MF",
+               pAdjustMethod = "BH",
+               pvalueCutoff  = 0.01,
+               qvalueCutoff  = 0.05,
+               readable      = TRUE)
+
+
+## KEGG
+
+kk_arf <- enrichKEGG(gene = gen_ID_arf$ENTREZID,
+                  organism   = 'hsa',
+                  pvalueCutoff = 0.05)
+
+#regID_ot <- regulonLst$Regulon.ID[i]
+
+## MsigDB hallmarks
+
+gen_sym_arf = bitr(DE_genes_arf, fromType="ENSEMBL", toType="SYMBOL", OrgDb="org.Hs.eg.db")
+
+riches_arf <- enricher(gene=gen_sym_arf$SYMBOL, TERM2GENE= h_t2g, pvalueCutoff = 0.05, minGSSize = 50, qvalueCutoff = 0.1, pAdjustMethod = "bonferroni" )
+hall_msig_arf <- as.data.frame(riches_arf)
+
+   kegg_rich_arf <- c()
+   React_rich_arf <- c()
+   gobp_rich_arf <- c()
+   gomf_rich_arf <- c()
+   hall_rich_arf <- c()
+   
+   if(!is.null(kk_arf)){
+   kegg_rich_arf <- cbind(cell_name[i],"Kegg", kk_arf[1:20,])
+   }
+   if(!is.null(rct_arf)){
+   React_rich_arf <- cbind(cell_name[i],"Reactome", rct_arf[1:20,])
+   }
+   if(!is.null(ego_arf)){
+   gobp_rich_arf <- cbind(cell_name[i],"GObp",ego_arf[1:20,])
+   }
+   if(!is.null(go_mf_arf)){
+     gomf_rich_arf <- cbind(cell_name[i],"GOmf",go_mf_arf[1:20,])
+   }
+   if(is.data.frame(hall_msig_arf) & nrow(hall_msig_arf) != 0){
+     
+     hall_rich_arf <- cbind(cell_name[i],"Msig_hall", hall_msig_arf)
+   }
+   
+   
+   if(!is.null(kegg_rich_arf)){
+   names(kegg_rich_arf) <- c("Cell_line","Category","Description", "GeneRatio", "BgRatio", "pvalue", "p.adjust", "qvalue", "geneID","Count")
+   }
+   if(!is.null(React_rich_arf)){
+   names(React_rich_arf) <- c("Cell_line","Category","Description", "GeneRatio", "BgRatio", "pvalue", "p.adjust", "qvalue", "geneID","Count")
+   }
+   if(!is.null(gobp_rich_arf)){
+   names(gobp_rich_arf) <- c("Cell_line","Category","Description", "GeneRatio", "BgRatio", "pvalue", "p.adjust", "qvalue", "geneID","Count")
+   }
+   if(is.data.frame(hall_msig_arf) & nrow(hall_msig_arf) != 0){
+    names(hall_rich_arf) <- c("Cell_line","Category","Description", "GeneRatio", "BgRatio", "pvalue", "p.adjust", "qvalue", "geneID","Count") 
+     
+   }
+   
+   arf_regsFuncAll <- rbind(arf_regsFuncAll, kegg_rich_arf, React_rich_arf, gobp_rich_arf)
+   arf_hallM <- rbind(arf_hallM, hall_rich_arf)
+}
+
+
+write.table(arf_regsFuncAll,"Res_gseaR/S1to6_EnrichPathst10_auranofin.txt")
+write.table(arf_hallM, "Res_gseaR/S1to6_Msig_hallmark_auranofin.txt" )
+
+
+
+
+```
+
+SUBSETTING EMT HALLMARK GENES AND CELL LINES EXHIBITING EMT (Auranofin)
+
+#filtering criteria for cell lines showing EMT
+
+Gene ratio > 0.1 or gene count > 50
+
+```{r}
+
+arf_hall_rev <- read.table("Res_gseaR/S1to6_Msig_hallmark_auranofin.txt", header = T)
+colnames(arf_hall_rev) <- c("Cell_line","Category","Description","Pathway","GeneRatio","BgRatio","pvalue","p.adjust","qvalue","geneID","Count")
+
+arf_hall_rev_filt <- arf_hall_rev %>% filter(Description == "HALLMARK_EPITHELIAL_MESENCHYMAL_TRANSITION" & p.adjust < 0.05) %>% separate(GeneRatio, sep = "/", into = c("GeneNo","CategoryNo")) %>% mutate(GRatio = as.numeric(GeneNo)/as.numeric(CategoryNo)) %>% filter(GRatio > 0.1 | Count > 50)
+
+arf_hall_rev_filt %>% select(Cell_line)
+
+arf_hall_rev_filtA <- arf_hall_rev_filt %>% mutate(gene_list = str_replace_all(geneID, "/", ",")) %>% select(Cell_line, gene_list)
+
+arf_hall_rev_filtB <- arf_hall_rev_filtA %>% separate_rows(gene_list)
+
+arf_hall_rev_geneL <- unique(arf_hall_rev_filtB$gene_list)
+
+```
+
+
+```{r}
+
+sn503_DE_arf <- sn503_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN503")
+
+sn505_DE_arf <- sn505_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN505")
+
+sn508_DE_arf <- sn508_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN508")
+
+sn520_DE_arf <- sn520_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN520")
+
+
+sn533_DE_arf <- sn533_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN533")
+
+
+sn575_DE_arf <- sn575_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN575")
+
+sn579_DE_arf <- sn579_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN579")
+
+sn674_DE_arf <- sn674_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN674")
+
+sn677_DE_arf <- sn677_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN677")
+
+sn753_DE_arf <- sn753_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN753")
+
+sn756_DE_arf <- sn756_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN756")
+
+sn810_DE_arf <- sn810_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN810")
+
+
+sn517_DE_arf <- sn517_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN517")
+
+
+sn521_DE_arf <- sn521_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN521")
+
+
+sn528_DE_arf <- sn528_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN528")
+
+
+sn529_DE_arf <- sn529_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN529")
+
+
+sn534_DE_arf <- sn534_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN534")
+
+sn553_DE_arf <- sn553_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN553")
+
+
+sn649_DE_arf <- sn649_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN649")
+
+
+sn667_DE_arf <- sn667_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN667")
+
+
+sn735_DE_arf <- sn735_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN735")
+
+
+sn747_DE_arf <- sn747_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN747")
+
+
+sn767_DE_arf <- sn767_arf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN767")
+
+arf_comB_deG <- rbind(sn553_DE_arf, sn528_DE_arf, sn735_DE_arf, sn667_DE_arf, sn747_DE_arf, sn756_DE_arf, sn753_DE_arf, sn517_DE_arf, sn575_DE_arf, sn521_DE_arf, sn810_DE_arf, sn767_DE_arf, sn533_DE_arf, sn505_DE_arf, sn677_DE_arf, sn529_DE_arf, sn534_DE_arf, sn520_DE_arf, sn503_DE_arf, sn508_DE_arf, sn674_DE_arf, sn649_DE_arf, sn579_DE_arf)
+
+```
+
+
+```{r}
+
+## EMT hallmark genes
+arf_hall_rev_geneL_id_mult <- bitr(arf_hall_rev_geneL, fromType="SYMBOL", toType=c("ENTREZID", "ENSEMBL","GENENAME"), OrgDb="org.Hs.eg.db")
+
+arf_DE_EMTg_FC <- arf_comB_deG %>% filter(Cellline %in% arf_hall_rev_filt$Cell_line & ENSEMBL %in% arf_hall_rev_geneL_id_mult$ENSEMBL)
+
+arf_DE_EMTg_FC_wide <- arf_DE_EMTg_FC %>% select(ENSEMBL,log2FoldChange, Cellline) %>%pivot_wider(names_from = Cellline, values_from = log2FoldChange)
+
+arf_DE_EMTg_FC_wide2 <- as.data.frame(arf_DE_EMTg_FC_wide)
+rownames(arf_DE_EMTg_FC_wide2) <- arf_DE_EMTg_FC_wide2$ENSEMBL
+
+
+arf_DE_EMTg_FC_wide3 <- arf_DE_EMTg_FC_wide2[,-1]
+arf_DE_EMTg_FC_wide3[is.na(arf_DE_EMTg_FC_wide3)] <- 0
+
+pheatmap(as.matrix(arf_DE_EMTg_FC_wide3), na_col = "grey", fontsize_row = 0, fontsize_col = 14, breaks = c(-10,-1,0,1, 10), color = c("darkblue","lightblue","white","orange","red"))
+
+
+```
+
+
+```{r}
+
+## Neftel marker genes
+
+#neftelM_geneL_id_mult <- bitr(neftel_markMES, fromType="SYMBOL", toType=c("ENTREZID", "ENSEMBL","GENENAME"), OrgDb="org.Hs.eg.db")
+
+arf_DE_Neftelg_FC <- arf_comB_deG %>% filter(ENSEMBL %in% neftelM_geneL_id_mult$ENSEMBL)
+
+arf_DE_Neftelg_FC_wide <- arf_DE_Neftelg_FC %>% select(SYMBOL,log2FoldChange, Cellline) %>%pivot_wider(names_from = Cellline, values_from = log2FoldChange)
+
+arf_DE_Neftelg_FC_wide2 <- as.data.frame(arf_DE_Neftelg_FC_wide)
+rownames(arf_DE_Neftelg_FC_wide2) <- arf_DE_Neftelg_FC_wide2$SYMBOL
+
+
+arf_DE_Neftelg_FC_wide3 <- arf_DE_Neftelg_FC_wide2[,-1]
+arf_DE_Neftelg_FC_wide3[is.na(arf_DE_Neftelg_FC_wide3)] <- 0
+
+pheatmap(as.matrix(arf_DE_Neftelg_FC_wide3), na_col = "grey", fontsize_row = 0, fontsize_col = 14, breaks = c(-10,-1,0,1, 10), color = c("darkblue","lightblue","white","orange","red"))
+
+
+
+
+```
+
+
+```{r}
+
+#verhaak PN 
+
+arf_DE_verHPN_FC <- arf_comB_deG %>% filter(ENSEMBL %in% verH_PN_geneL_id_mult$ENSEMBL)
+
+arf_DE_verHPN_FC_wide <- arf_DE_verHPN_FC %>% select(SYMBOL,log2FoldChange, Cellline) %>%pivot_wider(names_from = Cellline, values_from = log2FoldChange)
+
+arf_DE_verHPN_FC_wide2 <- as.data.frame(arf_DE_verHPN_FC_wide)
+rownames(arf_DE_verHPN_FC_wide2) <- arf_DE_verHPN_FC_wide2$SYMBOL
+
+
+arf_DE_verHPN_FC_wide3 <- arf_DE_verHPN_FC_wide2[,-1]
+arf_DE_verHPN_FC_wide3[is.na(arf_DE_verHPN_FC_wide3)] <- 0
+
+pheatmap(as.matrix(arf_DE_verHPN_FC_wide3), na_col = "grey", fontsize_row = 0, fontsize_col = 14, breaks = c(-10,-1,0,1, 10), color = c("darkblue","lightblue","white","orange","red"))
+
+
+```
+
+
+```{r}
+
+#SN579, SN520, SN503,  SN756, SN533, 
+#PN to MES sel cell lines
+
+arf_DE_verH_MES_FC <- arf_comB_deG %>% filter(ENSEMBL %in% verH_MES_geneL_id_mult$ENSEMBL)
+
+arf_DE_verH_MES_FC_wide <- arf_DE_verH_MES_FC %>% filter(Cellline %in% c("SN579", "SN520", "SN503",  "SN756", "SN533")) %>% select(SYMBOL,log2FoldChange, Cellline) %>% pivot_wider(names_from = Cellline, values_from = log2FoldChange)
+
+arf_DE_verH_MES_FC_wide2 <- as.data.frame(arf_DE_verH_MES_FC_wide)
+rownames(arf_DE_verH_MES_FC_wide2) <- arf_DE_verH_MES_FC_wide2$SYMBOL
+
+
+arf_DE_verH_MES_FC_wide3 <- arf_DE_verH_MES_FC_wide2[,-1]
+arf_DE_verH_MES_FC_wide3[is.na(arf_DE_verH_MES_FC_wide3)] <- 0
+
+pheatmap(as.matrix(arf_DE_verH_MES_FC_wide3), na_col = "grey", fontsize_row = 0, fontsize_col = 14, breaks = c(-10,-1,0,1, 10), color = c("darkblue","lightblue","white","orange","red"))
+
+arf_DE_verHPN_FC_wide4 <- arf_DE_verHPN_FC_wide3[,c("SN579", "SN520", "SN503",  "SN756", "SN533")]
+
+pheatmap(as.matrix(arf_DE_verHPN_FC_wide4), na_col = "grey", fontsize_row = 0, fontsize_col = 14, breaks = c(-10,-1,0,1, 10), color = c("darkblue","lightblue","white","orange","red"))
+
+
+
+```
+
+
+arf_TT
+        Drug Cell line              p-value          Gene ratio
+1  Auranofin     SN579    0.999999998563891  0.0170940170940171
+2  Auranofin     SN553    0.999999998563891  0.0170940170940171
+3  Auranofin     SN528    0.999999625535019  0.0299145299145299
+4  Auranofin     SN735     0.99992949792656   0.047008547008547
+5  Auranofin     SN667    0.999999988652888  0.0213675213675214
+6  Auranofin     SN747    0.999999998563891  0.0170940170940171
+7  Auranofin     SN756   0.0701680773426001    0.14957264957265
+8  Auranofin     SN753    0.997309770855664  0.0641025641025641
+9  Auranofin     SN517    0.999999998563891  0.0170940170940171
+10 Auranofin     SN575    0.999801136480542  0.0512820512820513
+11 Auranofin     SN521    0.997309770855664  0.0641025641025641
+12 Auranofin     SN810                    1                   0
+13 Auranofin     SN767     0.99992949792656   0.047008547008547
+14 Auranofin     SN533    0.769486131513034   0.102564102564103
+15 Auranofin     SN505    0.308879755902176   0.128205128205128
+16 Auranofin     SN677                    1                   0
+17 Auranofin     SN529                    1                   0
+18 Auranofin     SN534                    1                   0
+19 Auranofin     SN520    0.242684637410057   0.132478632478632
+20 Auranofin     SN503 0.000122787999499076   0.200854700854701
+21 Auranofin     SN508    0.999999928489559  0.0256410256410256
+22 Auranofin     SN674    0.999999998563891  0.0170940170940171
+23 Auranofin     SN649    0.999999999999732 0.00427350427350427
+24 Auranofin     SN579    0.700322872740359   0.106837606837607
+
+
+```{r}
+
+
+#Auranofin
+
+cells_arfLt <- unique(arf_comB_deG$Cellline)
+#regVg_TF #vary by cell line
+#intDEmesG <- unique(dsf_DE_verH_MES_FC$ENSEMBL) # vary by cell line
+#modGL <- length(verH_MES_geneL_id_mult$ENSEMBL)
+#uniBk <- c(44606) 
+#overA = uniBk - regVg_TF 
+#inte = intDEmesG -1
+
+arf_comB_deG_listO <- rbind(length(unique(sn553_DE_arf$ENSEMBL)), length(unique(sn528_DE_arf$ENSEMBL)), length(unique(sn735_DE_arf$ENSEMBL)), length(unique(sn667_DE_arf$ENSEMBL)), length(unique(sn747_DE_arf$ENSEMBL)), length(unique(sn756_DE_arf$ENSEMBL)), length(unique(sn753_DE_arf$ENSEMBL)), length(unique(sn517_DE_arf$ENSEMBL)), length(unique(sn575_DE_arf$ENSEMBL)), length(unique(sn521_DE_arf$ENSEMBL)), length(unique(sn810_DE_arf$ENSEMBL)), length(unique(sn767_DE_arf$ENSEMBL)), length(unique(sn533_DE_arf$ENSEMBL)), length(unique(sn505_DE_arf$ENSEMBL)), length(unique(sn677_DE_arf$ENSEMBL)), length(unique(sn529_DE_arf$ENSEMBL)), length(unique(sn534_DE_arf$ENSEMBL)), length(unique(sn520_DE_arf$ENSEMBL)), length(unique(sn503_DE_arf$ENSEMBL)), length(unique(sn508_DE_arf$ENSEMBL)), length(unique(sn674_DE_arf$ENSEMBL)), length(unique(sn649_DE_arf$ENSEMBL)), length(unique(sn579_DE_arf$ENSEMBL)))
+
+for(g in 1:length(cells_arfLt)){
+  Deg_TF <- arf_comB_deG %>% filter(Cellline %in% cells_arfLt[g])
+  regVg_TF <- arf_comB_deG_listO[g,1]
+  comG <- arf_comB_deG %>% filter(ENSEMBL %in% verH_MES_geneL_id_mult$ENSEMBL & Cellline %in% cells_arfLt[g])
+  intDEmesG <- length(comG$ENSEMBL)
+  overA = uniBk - regVg_TF 
+  inte = intDEmesG -1
+  pval_hper <- phyper(q = inte, m = regVg_TF, n = overA, k = modGL, lower.tail = FALSE )
+  gr_mes <- intDEmesG/modGL
+  hp_stat <- cbind("Auranofin", cells_arfLt[g], pval_hper, gr_mes, regVg_TF, intDEmesG)
+  colnames(hp_stat) <- c("Drug","Cell line", "p-value","Gene ratio", "DiffG","Match")
+  des_mesT <- rbind(des_mesT, hp_stat)
+}
+  
+#disF_TT <-as.data.frame(des_mesT)
+
+
+
+```
+
+arf_TT %>% filter(`p-value` < 0.05)
+       Drug Cell line              p-value        Gene ratio
+1 Auranofin     SN503 0.000122787999499076 0.200854700854701
+
+arf_TT %>% filter(`Gene ratio` > 0.1)
+       Drug Cell line              p-value        Gene ratio
+1 Auranofin     SN756   0.0701680773426001  0.14957264957265
+2 Auranofin     SN533    0.769486131513034 0.102564102564103
+3 Auranofin     SN505    0.308879755902176 0.128205128205128
+4 Auranofin     SN520    0.242684637410057 0.132478632478632
+5 Auranofin     SN503 0.000122787999499076 0.200854700854701
+6 Auranofin     SN579    0.700322872740359 0.106837606837607
+
+5. ANALYZING CANCER HALLMARKS IN ALBENDAZOLE TREATED SAMPLES #check code & run
+
+
+```{r}
+##Hallmark for UP genes only
+DEgenes_albO <- c()
+
+#resT_dir <- "/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal"
+#cells_sampM <- unique(meta_set1to6_allE2$Cell.Line)
+
+for(i in 1:length(cells_sampM)){
+  fil_DEres <- paste(resT_dir,cells_sampM[i],"DE_albendazole.txt", sep="/")
+  
+  resF_alb <- read.table(fil_DEres, header = T) 
+  cell_DE_alb <- resF_alb %>% filter(padj < 0.05 & log2FoldChange > 1) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+  ltNam <- paste("alb",i, sep = "_")
+  DEgenes_albO[[cells_sampM[i]]] <- list(ltNam = cell_DE_alb$ENSEMBL)
+  
+  }
+
+
+
+
+
+```
+
+
+
+```{r}
+
+alb_regsFuncAll <-c()
+alb_hallM <- c()
+
+cell_line_no <- length(DEgenes_albO)
+
+for(i in 1:length(DEgenes_albO)){
+  cell_name <- names(DEgenes_albO)
+
+  DE_genes_alb <- DEgenes_albO[[cell_name[i]]]$ltNam
+  
+  
+  ##Reactome
+  gen_ID_alb = bitr(DE_genes_alb, fromType="ENSEMBL", toType="ENTREZID", OrgDb="org.Hs.eg.db")
+  rct_alb <- enrichPathway(gene=gen_ID_alb$ENTREZID, pvalueCutoff = 0.05, readable=TRUE)
+ #head(x)
+
+  ##GO BP
+ego_alb <- enrichGO(gene   = gen_ID_alb$ENTREZID,
+                OrgDb  = org.Hs.eg.db,
+               ont  = "BP",
+               pAdjustMethod = "BH",
+               pvalueCutoff  = 0.01,
+               qvalueCutoff  = 0.05,
+               readable      = TRUE)
+
+
+go_mf_alb <- enrichGO(gene = gen_ID_alb$ENTREZID,
+                OrgDb = org.Hs.eg.db,
+               ont  = "MF",
+               pAdjustMethod = "BH",
+               pvalueCutoff  = 0.01,
+               qvalueCutoff  = 0.05,
+               readable      = TRUE)
+
+
+## KEGG
+
+kk_alb <- enrichKEGG(gene = gen_ID_alb$ENTREZID,
+                  organism   = 'hsa',
+                  pvalueCutoff = 0.05)
+
+#regID_ot <- regulonLst$Regulon.ID[i]
+
+## MsigDB hallmarks
+
+gen_sym_alb = bitr(DE_genes_alb, fromType="ENSEMBL", toType="SYMBOL", OrgDb="org.Hs.eg.db")
+
+riches_alb <- enricher(gene=gen_sym_alb$SYMBOL, TERM2GENE= h_t2g, pvalueCutoff = 0.05, minGSSize = 50, qvalueCutoff = 0.1, pAdjustMethod = "bonferroni" )
+hall_msig_alb <- as.data.frame(riches_alb)
+
+   kegg_rich_alb <- c()
+   React_rich_alb <- c()
+   gobp_rich_alb <- c()
+   gomf_rich_alb <- c()
+   hall_rich_alb <- c()
+   
+   if(!is.null(kk_alb)){
+   kegg_rich_alb <- cbind(cell_name[i],"Kegg", kk_alb[1:20,])
+   }
+   if(!is.null(rct_alb)){
+   React_rich_alb <- cbind(cell_name[i],"Reactome", rct_alb[1:20,])
+   }
+   if(!is.null(ego_alb)){
+   gobp_rich_alb <- cbind(cell_name[i],"GObp",ego_alb[1:20,])
+   }
+   if(!is.null(go_mf_alb)){
+     gomf_rich_alb <- cbind(cell_name[i],"GOmf",go_mf_alb[1:20,])
+   }
+   if(is.data.frame(hall_msig_alb) & nrow(hall_msig_alb) != 0){
+     
+     hall_rich_alb <- cbind(cell_name[i],"Msig_hall", hall_msig_alb)
+   }
+   
+   
+   if(!is.null(kegg_rich_alb)){
+   names(kegg_rich_alb) <- c("Cell_line","Category","Description", "GeneRatio", "BgRatio", "pvalue", "p.adjust", "qvalue", "geneID","Count")
+   }
+   if(!is.null(React_rich_alb)){
+   names(React_rich_alb) <- c("Cell_line","Category","Description", "GeneRatio", "BgRatio", "pvalue", "p.adjust", "qvalue", "geneID","Count")
+   }
+   if(!is.null(gobp_rich_alb)){
+   names(gobp_rich_alb) <- c("Cell_line","Category","Description", "GeneRatio", "BgRatio", "pvalue", "p.adjust", "qvalue", "geneID","Count")
+   }
+   if(is.data.frame(hall_msig_alb) & nrow(hall_msig_alb) != 0){
+    names(hall_rich_arf) <- c("Cell_line","Category","Description", "GeneRatio", "BgRatio", "pvalue", "p.adjust", "qvalue", "geneID","Count") 
+     
+   }
+   
+   alb_regsFuncAll <- rbind(alb_regsFuncAll, kegg_rich_alb, React_rich_alb, gobp_rich_alb)
+   alb_hallM <- rbind(alb_hallM, hall_rich_alb)
+}
+
+
+write.table(alb_regsFuncAll,"Res_gseaR/S1to6_EnrichPathst10_albendazole.txt")
+write.table(alb_hallM, "Res_gseaR/S1to6_Msig_hallmark_albendazole.txt" )
+
+
+
+
+```
+
+SUBSETTING EMT HALLMARK GENES AND CELL LINES EXHIBITING EMT (Albendazole)
+
+#filtering criteria for cell lines showing EMT
+
+Gene ratio > 0.1 or gene count > 50
+
+```{r}
+
+alb_hall_rev <- read.table("Res_gseaR/S1to6_Msig_hallmark_albendazole.txt", header = T)
+colnames(alb_hall_rev) <- c("Cell_line","Category","Description","Pathway","GeneRatio","BgRatio","pvalue","p.adjust","qvalue","geneID","Count")
+
+alb_hall_rev_filt <- alb_hall_rev %>% filter(Description == "HALLMARK_EPITHELIAL_MESENCHYMAL_TRANSITION" & p.adjust < 0.05) %>% separate(GeneRatio, sep = "/", into = c("GeneNo","CategoryNo")) %>% mutate(GRatio = as.numeric(GeneNo)/as.numeric(CategoryNo)) %>% filter(GRatio > 0.1 | Count > 50)
+
+alb_hall_rev_filt %>% select(Cell_line)
+
+alb_hall_rev_filtA <- alb_hall_rev_filt %>% mutate(gene_list = str_replace_all(geneID, "/", ",")) %>% select(Cell_line, gene_list)
+
+alb_hall_rev_filtB <- alb_hall_rev_filtA %>% separate_rows(gene_list)
+
+alb_hall_rev_geneL <- unique(alb_hall_rev_filtB$gene_list)
+
+```
+
+
+```{r}
+
+sn503_DE_alb <- sn503_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN503")
+
+sn505_DE_alb <- sn505_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN505")
+
+sn508_DE_alb <- sn508_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN508")
+
+sn520_DE_alb <- sn520_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN520")
+
+
+sn533_DE_alb <- sn533_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN533")
+
+
+sn575_DE_alb <- sn575_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN575")
+
+sn579_DE_alb <- sn579_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN579")
+
+sn674_DE_alb <- sn674_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN674")
+
+sn677_DE_alb <- sn677_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN677")
+
+sn753_DE_alb <- sn753_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN753")
+
+sn756_DE_alb <- sn756_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN756")
+
+sn810_DE_alb <- sn810_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN810")
+
+
+sn517_DE_alb <- sn517_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN517")
+
+
+sn521_DE_alb <- sn521_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN521")
+
+
+sn528_DE_alb <- sn528_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN528")
+
+
+sn529_DE_alb <- sn529_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN529")
+
+
+sn534_DE_alb <- sn534_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN534")
+
+sn553_DE_alb <- sn553_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN553")
+
+
+sn649_DE_alb <- sn649_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN649")
+
+
+sn667_DE_alb <- sn667_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN667")
+
+
+sn735_DE_alb <- sn735_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN735")
+
+
+sn747_DE_alb <- sn747_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN747")
+
+
+sn767_DE_alb <- sn767_alb %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN767")
+
+alb_comB_deG <- rbind(sn553_DE_alb, sn528_DE_alb, sn735_DE_alb, sn667_DE_alb, sn747_DE_alb, sn756_DE_alb, sn753_DE_alb, sn517_DE_alb, sn575_DE_alb, sn521_DE_alb, sn810_DE_alb, sn767_DE_alb, sn533_DE_alb, sn505_DE_alb, sn677_DE_alb, sn529_DE_alb, sn534_DE_alb, sn520_DE_alb, sn503_DE_alb, sn508_DE_alb, sn674_DE_alb, sn649_DE_alb, sn579_DE_alb)
+
+```
+
+
+```{r}
+
+## EMT hallmark genes
+alb_hall_rev_geneL_id_mult <- bitr(alb_hall_rev_geneL, fromType="SYMBOL", toType=c("ENTREZID", "ENSEMBL","GENENAME"), OrgDb="org.Hs.eg.db")
+
+alb_DE_EMTg_FC <- alb_comB_deG %>% filter(Cellline %in% alb_hall_rev_filt$Cell_line & ENSEMBL %in% alb_hall_rev_geneL_id_mult$ENSEMBL)
+
+alb_DE_EMTg_FC_wide <- alb_DE_EMTg_FC %>% select(ENSEMBL,log2FoldChange, Cellline) %>%pivot_wider(names_from = Cellline, values_from = log2FoldChange)
+
+alb_DE_EMTg_FC_wide2 <- as.data.frame(alb_DE_EMTg_FC_wide)
+rownames(alb_DE_EMTg_FC_wide2) <- alb_DE_EMTg_FC_wide2$ENSEMBL
+
+
+alb_DE_EMTg_FC_wide3 <- alb_DE_EMTg_FC_wide2[,-1]
+alb_DE_EMTg_FC_wide3[is.na(alb_DE_EMTg_FC_wide3)] <- 0
+
+pheatmap(as.matrix(alb_DE_EMTg_FC_wide3), na_col = "grey", fontsize_row = 0, fontsize_col = 14, breaks = c(-10,-1,0,1, 10), color = c("darkblue","lightblue","white","orange","red"))
+
+
+```
+
+
+```{r}
+
+## Neftel marker genes
+
+#neftelM_geneL_id_mult <- bitr(neftel_markMES, fromType="SYMBOL", toType=c("ENTREZID", "ENSEMBL","GENENAME"), OrgDb="org.Hs.eg.db")
+
+alb_DE_Neftelg_FC <- alb_comB_deG %>% filter(ENSEMBL %in% neftelM_geneL_id_mult$ENSEMBL)
+
+alb_DE_Neftelg_FC_wide <- alb_DE_Neftelg_FC %>% select(SYMBOL,log2FoldChange, Cellline) %>%pivot_wider(names_from = Cellline, values_from = log2FoldChange)
+
+alb_DE_Neftelg_FC_wide2 <- as.data.frame(alb_DE_Neftelg_FC_wide)
+rownames(alb_DE_Neftelg_FC_wide2) <- alb_DE_Neftelg_FC_wide2$SYMBOL
+
+
+alb_DE_Neftelg_FC_wide3 <- alb_DE_Neftelg_FC_wide2[,-1]
+alb_DE_Neftelg_FC_wide3[is.na(alb_DE_Neftelg_FC_wide3)] <- 0
+
+pheatmap(as.matrix(alb_DE_Neftelg_FC_wide3), na_col = "grey", fontsize_row = 0, fontsize_col = 14, breaks = c(-10,-1,0,1, 10), color = c("darkblue","lightblue","white","orange","red"))
+
+
+
+
+```
+
+
+
+```{r}
+
+alb_DE_verHPN_FC <- alb_comB_deG %>% filter(ENSEMBL %in% verH_PN_geneL_id_mult$ENSEMBL)
+
+alb_DE_verHPN_FC_wide <- alb_DE_verHPN_FC %>% select(SYMBOL,log2FoldChange, Cellline) %>%pivot_wider(names_from = Cellline, values_from = log2FoldChange)
+
+alb_DE_verHPN_FC_wide2 <- as.data.frame(alb_DE_verHPN_FC_wide)
+rownames(alb_DE_verHPN_FC_wide2) <- alb_DE_verHPN_FC_wide2$SYMBOL
+
+
+alb_DE_verHPN_FC_wide3 <- alb_DE_verHPN_FC_wide2[,-1]
+alb_DE_verHPN_FC_wide3[is.na(alb_DE_verHPN_FC_wide3)] <- 0
+
+pheatmap(as.matrix(alb_DE_verHPN_FC_wide3), na_col = "grey", fontsize_row = 0, fontsize_col = 14, breaks = c(-10,-1,0,1, 10), color = c("darkblue","lightblue","white","orange","red"))
+
+
+
+```
+
+
+
+```{r}
+#SN575, SN767, SN579
+#PN to MES sel cell lines
+
+alb_DE_verH_MES_FC <- alb_comB_deG %>% filter(ENSEMBL %in% verH_MES_geneL_id_mult$ENSEMBL)
+
+alb_DE_verH_MES_FC_wide <- alb_DE_verH_MES_FC %>% filter(Cellline %in% c("SN579", "SN767", "SN575", "SN521","SN520","SN677")) %>% select(SYMBOL,log2FoldChange, Cellline) %>% pivot_wider(names_from = Cellline, values_from = log2FoldChange)
+
+alb_DE_verH_MES_FC_wide2 <- as.data.frame(alb_DE_verH_MES_FC_wide)
+rownames(alb_DE_verH_MES_FC_wide2) <- alb_DE_verH_MES_FC_wide2$SYMBOL
+
+
+alb_DE_verH_MES_FC_wide3 <- alb_DE_verH_MES_FC_wide2[,-1]
+alb_DE_verH_MES_FC_wide3[is.na(alb_DE_verH_MES_FC_wide3)] <- 0
+
+pheatmap(as.matrix(alb_DE_verH_MES_FC_wide3), na_col = "grey", fontsize_row = 0, fontsize_col = 14, breaks = c(-10,-1,0,1, 10), color = c("darkblue","lightblue","white","orange","red"))
+
+alb_DE_verHPN_FC_wide4 <- alb_DE_verHPN_FC_wide3[,c("SN579", "SN767", "SN575", "SN521","SN520","SN677")]
+
+pheatmap(as.matrix(alb_DE_verHPN_FC_wide4), na_col = "grey", fontsize_row = 0, fontsize_col = 14, breaks = c(-10,-1,0,1, 10), color = c("darkblue","lightblue","white","orange","red"))
+
+
+
+```
+
+
+           Drug Cell line              p-value          Gene ratio
+1  Albenadazole     SN553     0.99999488180972  0.0128205128205128
+2  Albenadazole     SN553     0.99999488180972  0.0128205128205128
+3  Albenadazole     SN528      0.9999994633397 0.00854700854700855
+4  Albenadazole     SN735    0.999845266607475  0.0213675213675214
+5  Albenadazole     SN667    0.999410934854583  0.0256410256410256
+6  Albenadazole     SN747    0.999999971904006 0.00427350427350427
+7  Albenadazole     SN756    0.950517008261687   0.047008547008547
+8  Albenadazole     SN753    0.974209434671223  0.0427350427350427
+9  Albenadazole     SN517    0.999999971904006 0.00427350427350427
+10 Albenadazole     SN575 6.37843892595899e-05   0.145299145299145
+11 Albenadazole     SN521   0.0475779711179162   0.102564102564103
+12 Albenadazole     SN810      0.9999994633397 0.00854700854700855
+13 Albenadazole     SN767    0.987863590560667  0.0384615384615385
+14 Albenadazole     SN533    0.913322418262906  0.0512820512820513
+15 Albenadazole     SN505                    1                   0
+16 Albenadazole     SN677    0.789972762519373  0.0598290598290598
+17 Albenadazole     SN529    0.999845266607475  0.0213675213675214
+18 Albenadazole     SN534                    1                   0
+19 Albenadazole     SN520    0.704773084600051  0.0641025641025641
+20 Albenadazole     SN503    0.999999971904006 0.00427350427350427
+21 Albenadazole     SN508    0.999999971904006 0.00427350427350427
+22 Albenadazole     SN674      0.9999994633397 0.00854700854700855
+23 Albenadazole     SN649     0.99999488180972  0.0128205128205128
+24 Albenadazole     SN579   0.0169670776079723   0.111111111111111 
+
+
+
+```{r}
+
+
+#DE gene set: regVg_TF [4199]
+#PN gene set: modGL [185]
+#MES gene set: modGL [234] verH_MES_geneL_id_mult$ENSEMBL
+#Total genes: 44606 uniBk
+#intersect between DE gene and gene set - matc_st9Lst1H_TF [51]
+#overA = uniBk - regVg_TF [40407]
+#inte = matc_st9Lst1H_TF -1
+
+#phy_sigTF <- phyper(q = inte, m = regVg_TF, n = overA, k = modGL, lower.tail = FALSE )
+#gene_rat_TF <- length(unique(TF_regmodGV$gene_short_name))/length(TF_regSig_genL)
+
+
+#dsf_DE_verH_MES_FC  dsf_comB_deG
+
+#Albendazole
+
+alb_comB_deG_listO <- rbind(length(unique(sn553_DE_alb$ENSEMBL)), length(unique(sn528_DE_alb$ENSEMBL)), length(unique(sn735_DE_alb$ENSEMBL)), length(unique(sn667_DE_alb$ENSEMBL)), length(unique(sn747_DE_alb$ENSEMBL)), length(unique(sn756_DE_alb$ENSEMBL)), length(unique(sn753_DE_alb$ENSEMBL)), length(unique(sn517_DE_alb$ENSEMBL)), length(unique(sn575_DE_alb$ENSEMBL)), length(unique(sn521_DE_alb$ENSEMBL)), length(unique(sn810_DE_alb$ENSEMBL)), length(unique(sn767_DE_alb$ENSEMBL)), length(unique(sn533_DE_alb$ENSEMBL)), length(unique(sn505_DE_alb$ENSEMBL)), length(unique(sn677_DE_alb$ENSEMBL)), length(unique(sn529_DE_alb$ENSEMBL)), length(unique(sn534_DE_alb$ENSEMBL)), length(unique(sn520_DE_alb$ENSEMBL)), length(unique(sn503_DE_alb$ENSEMBL)), length(unique(sn508_DE_alb$ENSEMBL)), length(unique(sn674_DE_alb$ENSEMBL)), length(unique(sn649_DE_alb$ENSEMBL)), length(unique(sn579_DE_alb$ENSEMBL)))
+
+cells_albLt <- unique(alb_comB_deG$Cellline)
+#regVg_TF #vary by cell line
+#intDEmesG <- unique(dsf_DE_verH_MES_FC$ENSEMBL) # vary by cell line
+#modGL <- length(verH_MES_geneL_id_mult$ENSEMBL)
+#uniBk <- c(44606) 
+#overA = uniBk - regVg_TF 
+#inte = intDEmesG -1
+
+
+for(g in 1:length(cells_albLt)){
+  Deg_TF <- alb_comB_deG %>% filter(Cellline %in% cells_albLt[g])
+  regVg_TF <- alb_comB_deG_listO[g,1]
+  comG <- alb_comB_deG %>% filter(ENSEMBL %in% verH_MES_geneL_id_mult$ENSEMBL & Cellline %in% cells_albLt[g])
+  intDEmesG <- length(comG$ENSEMBL)
+  overA = uniBk - regVg_TF 
+  inte = intDEmesG -1
+  pval_hper <- phyper(q = inte, m = regVg_TF, n = overA, k = modGL, lower.tail = FALSE )
+  gr_mes <- intDEmesG/modGL
+  hp_stat <- cbind("Albenadazole", cells_albLt[g], pval_hper, gr_mes, regVg_TF, intDEmesG)
+  colnames(hp_stat) <- c("Drug","Cell line", "p-value","Gene ratio","DiffG","Match")
+  des_mesT <- rbind(des_mesT, hp_stat)
+}
+  
+#disF_TT <-as.data.frame(des_mesT)
+
+
+```
+
+
+Alb_TT %>% filter(`p-value` < 0.05)
+          Drug Cell line            p-value        Gene ratio
+1 Albenadazole     SN521 0.0475779711179162 0.102564102564103
+2 Albenadazole     SN579 0.0169670776079723 0.111111111111111
+10 Albenadazole     SN575 6.37843892595899e-05   0.145299145299145
+
+Alb_TT %>% filter(`Gene ratio` > 0.1)
+         Drug Cell line              p-value        Gene ratio
+1 Albenadazole     SN575 6.37843892595899e-05 0.145299145299145
+2 Albenadazole     SN521   0.0475779711179162 0.102564102564103
+3 Albenadazole     SN579   0.0169670776079723 0.111111111111111
+
+
+
+##Colchicine
+
+
+6. ANALYZING CANCER HALLMARKS IN COLCHICINE TREATED SAMPLES #check code & run
+
+
+```{r}
+##Hallmark for UP genes only
+DEgenes_colO <- c()
+
+#resT_dir <- "/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal"
+#cells_sampM <- unique(meta_set1to6_allE2$Cell.Line)
+
+for(i in 1:length(cells_sampM)){
+  fil_DEres <- paste(resT_dir,cells_sampM[i],"DE_colchicine.txt", sep="/")
+  
+  resF_col <- read.table(fil_DEres, header = T) 
+  cell_DE_col <- resF_col %>% filter(padj < 0.05 & log2FoldChange > 1) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+  ltNam <- paste("col",i, sep = "_")
+  DEgenes_colO[[cells_sampM[i]]] <- list(ltNam = cell_DE_col$ENSEMBL)
+  
+  }
+
+
+
+
+
+```
+
+
+
+```{r}
+
+col_regsFuncAll <-c()
+col_hallM <- c()
+
+cell_line_no <- length(DEgenes_colO)
+
+for(i in 1:length(DEgenes_colO)){
+  cell_name <- names(DEgenes_colO)
+
+  DE_genes_col <- DEgenes_colO[[cell_name[i]]]$ltNam
+  
+  
+  ##Reactome
+  gen_ID_col = bitr(DE_genes_col, fromType="ENSEMBL", toType="ENTREZID", OrgDb="org.Hs.eg.db")
+  rct_col <- enrichPathway(gene=gen_ID_col$ENTREZID, pvalueCutoff = 0.05, readable=TRUE)
+ #head(x)
+
+  ##GO BP
+ego_col <- enrichGO(gene   = gen_ID_col$ENTREZID,
+                OrgDb  = org.Hs.eg.db,
+               ont  = "BP",
+               pAdjustMethod = "BH",
+               pvalueCutoff  = 0.01,
+               qvalueCutoff  = 0.05,
+               readable      = TRUE)
+
+
+go_mf_col <- enrichGO(gene = gen_ID_col$ENTREZID,
+                OrgDb = org.Hs.eg.db,
+               ont  = "MF",
+               pAdjustMethod = "BH",
+               pvalueCutoff  = 0.01,
+               qvalueCutoff  = 0.05,
+               readable      = TRUE)
+
+
+## KEGG
+
+kk_col <- enrichKEGG(gene = gen_ID_col$ENTREZID,
+                  organism   = 'hsa',
+                  pvalueCutoff = 0.05)
+
+#regID_ot <- regulonLst$Regulon.ID[i]
+
+## MsigDB hallmarks
+
+gen_sym_col = bitr(DE_genes_col, fromType="ENSEMBL", toType="SYMBOL", OrgDb="org.Hs.eg.db")
+
+riches_col <- enricher(gene=gen_sym_col$SYMBOL, TERM2GENE= h_t2g, pvalueCutoff = 0.05, minGSSize = 50, qvalueCutoff = 0.1, pAdjustMethod = "bonferroni" )
+hall_msig_col <- as.data.frame(riches_col)
+
+   kegg_rich_col <- c()
+   React_rich_col <- c()
+   gobp_rich_col <- c()
+   gomf_rich_col <- c()
+   hall_rich_col <- c()
+   
+   if(!is.null(kk_col)){
+   kegg_rich_col <- cbind(cell_name[i],"Kegg", kk_col[1:20,])
+   }
+   if(!is.null(rct_col)){
+   React_rich_col <- cbind(cell_name[i],"Reactome", rct_col[1:20,])
+   }
+   if(!is.null(ego_col)){
+   gobp_rich_col <- cbind(cell_name[i],"GObp",ego_col[1:20,])
+   }
+   if(!is.null(go_mf_col)){
+     gomf_rich_col <- cbind(cell_name[i],"GOmf",go_mf_col[1:20,])
+   }
+   if(is.data.frame(hall_msig_col) & nrow(hall_msig_col) != 0){
+     
+     hall_rich_col <- cbind(cell_name[i],"Msig_hall", hall_msig_col)
+   }
+   
+   
+   if(!is.null(kegg_rich_col)){
+   names(kegg_rich_col) <- c("Cell_line","Category","Description", "GeneRatio", "BgRatio", "pvalue", "p.adjust", "qvalue", "geneID","Count")
+   }
+   if(!is.null(React_rich_col)){
+   names(React_rich_col) <- c("Cell_line","Category","Description", "GeneRatio", "BgRatio", "pvalue", "p.adjust", "qvalue", "geneID","Count")
+   }
+   if(!is.null(gobp_rich_col)){
+   names(gobp_rich_col) <- c("Cell_line","Category","Description", "GeneRatio", "BgRatio", "pvalue", "p.adjust", "qvalue", "geneID","Count")
+   }
+   if(is.data.frame(hall_msig_col) & nrow(hall_msig_col) != 0){
+    names(hall_rich_col) <- c("Cell_line","Category","Description", "GeneRatio", "BgRatio", "pvalue", "p.adjust", "qvalue", "geneID","Count") 
+     
+   }
+   
+   col_regsFuncAll <- rbind(col_regsFuncAll, kegg_rich_col, React_rich_col, gobp_rich_col)
+   col_hallM <- rbind(col_hallM, hall_rich_col)
+}
+
+
+write.table(col_regsFuncAll,"Res_gseaR/S1to6_EnrichPathst10_colchicine.txt")
+write.table(col_hallM, "Res_gseaR/S1to6_Msig_hallmark_colchicine.txt" )
+
+
+
+
+```
+
+#SUBSETTING EMT HALLMARK GENES AND CELL LINES EXHIBITING EMT (Colchicine)
+
+#filtering criteria for cell lines showing EMT
+
+#Gene ratio > 0.1 or gene count > 50
+
+```{r}
+
+col_hall_rev <- read.table("Res_gseaR/S1to6_Msig_hallmark_colchicine.txt", header = T)
+colnames(col_hall_rev) <- c("Cell_line","Category","Description","Pathway","GeneRatio","BgRatio","pvalue","p.adjust","qvalue","geneID","Count")
+
+col_hall_rev_filt <- col_hall_rev %>% filter(Description == "HALLMARK_EPITHELIAL_MESENCHYMAL_TRANSITION" & p.adjust < 0.05) %>% separate(GeneRatio, sep = "/", into = c("GeneNo","CategoryNo")) %>% mutate(GRatio = as.numeric(GeneNo)/as.numeric(CategoryNo)) %>% filter(GRatio > 0.1 | Count > 50)
+
+col_hall_rev_filt %>% select(Cell_line)
+
+col_hall_rev_filtA <- col_hall_rev_filt %>% mutate(gene_list = str_replace_all(geneID, "/", ",")) %>% select(Cell_line, gene_list)
+
+col_hall_rev_filtB <- col_hall_rev_filtA %>% separate_rows(gene_list)
+
+col_hall_rev_geneL <- unique(col_hall_rev_filtB$gene_list)
+
+```
+
+
+```{r}
+
+sn503_DE_col <- sn503_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN503")
+
+sn505_DE_col <- sn505_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN505")
+
+sn508_DE_col <- sn508_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN508")
+
+sn520_DE_col <- sn520_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN520")
+
+
+sn533_DE_col <- sn533_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN533")
+
+
+sn575_DE_col <- sn575_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN575")
+
+sn579_DE_col <- sn579_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN579")
+
+sn674_DE_col <- sn674_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN674")
+
+sn677_DE_col <- sn677_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN677")
+
+sn753_DE_col <- sn753_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN753")
+
+sn756_DE_col <- sn756_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN756")
+
+sn810_DE_col <- sn810_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN810")
+
+
+sn517_DE_col <- sn517_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN517")
+
+
+sn521_DE_col <- sn521_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN521")
+
+
+sn528_DE_col <- sn528_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN528")
+
+
+sn529_DE_col <- sn529_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN529")
+
+
+sn534_DE_col <- sn534_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN534")
+
+sn553_DE_col <- sn553_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN553")
+
+
+sn649_DE_col <- sn649_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN649")
+
+
+sn667_DE_col <- sn667_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN667")
+
+
+sn735_DE_col <- sn735_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN735")
+
+
+sn747_DE_col <- sn747_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN747")
+
+
+sn767_DE_col <- sn767_col %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN767")
+
+col_comB_deG <- rbind(sn553_DE_col, sn528_DE_col, sn735_DE_col, sn667_DE_col, sn747_DE_col, sn756_DE_col, sn753_DE_col, sn517_DE_col, sn575_DE_col, sn521_DE_col, sn810_DE_col, sn767_DE_col, sn533_DE_col, sn505_DE_col, sn677_DE_col, sn529_DE_col, sn534_DE_col, sn520_DE_col, sn503_DE_col, sn508_DE_col, sn674_DE_col, sn649_DE_col, sn579_DE_col)
+
+```
+
+
+```{r}
+
+## EMT hallmark genes
+col_hall_rev_geneL_id_mult <- bitr(col_hall_rev_geneL, fromType="SYMBOL", toType=c("ENTREZID", "ENSEMBL","GENENAME"), OrgDb="org.Hs.eg.db")
+
+col_DE_EMTg_FC <- col_comB_deG %>% filter(Cellline %in% col_hall_rev_filt$Cell_line & ENSEMBL %in% col_hall_rev_geneL_id_mult$ENSEMBL)
+
+col_DE_EMTg_FC_wide <- col_DE_EMTg_FC %>% select(ENSEMBL,log2FoldChange, Cellline) %>%pivot_wider(names_from = Cellline, values_from = log2FoldChange)
+
+col_DE_EMTg_FC_wide2 <- as.data.frame(col_DE_EMTg_FC_wide)
+rownames(col_DE_EMTg_FC_wide2) <- col_DE_EMTg_FC_wide2$ENSEMBL
+
+
+col_DE_EMTg_FC_wide3 <- col_DE_EMTg_FC_wide2[,-1]
+col_DE_EMTg_FC_wide3[is.na(col_DE_EMTg_FC_wide3)] <- 0
+
+pheatmap(as.matrix(col_DE_EMTg_FC_wide3), na_col = "grey", fontsize_row = 0, fontsize_col = 14, breaks = c(-10,-1,0,1, 10), color = c("darkblue","lightblue","white","orange","red"))
+
+
+```
+
+
+```{r}
+
+## Neftel marker genes
+
+#neftelM_geneL_id_mult <- bitr(neftel_markMES, fromType="SYMBOL", toType=c("ENTREZID", "ENSEMBL","GENENAME"), OrgDb="org.Hs.eg.db")
+
+col_DE_Neftelg_FC <- col_comB_deG %>% filter(ENSEMBL %in% neftelM_geneL_id_mult$ENSEMBL)
+
+col_DE_Neftelg_FC_wide <- col_DE_Neftelg_FC %>% select(SYMBOL,log2FoldChange, Cellline) %>%pivot_wider(names_from = Cellline, values_from = log2FoldChange)
+
+col_DE_Neftelg_FC_wide2 <- as.data.frame(col_DE_Neftelg_FC_wide)
+rownames(col_DE_Neftelg_FC_wide2) <- col_DE_Neftelg_FC_wide2$SYMBOL
+
+
+col_DE_Neftelg_FC_wide3 <- col_DE_Neftelg_FC_wide2[,-1]
+col_DE_Neftelg_FC_wide3[is.na(col_DE_Neftelg_FC_wide3)] <- 0
+
+pheatmap(as.matrix(col_DE_Neftelg_FC_wide3), na_col = "grey", fontsize_row = 0, fontsize_col = 14, breaks = c(-10,-1,0,1, 10), color = c("darkblue","lightblue","white","orange","red"))
+
+
+
+
+```
+
+
+
+```{r}
+
+col_DE_verHPN_FC <- col_comB_deG %>% filter(ENSEMBL %in% verH_PN_geneL_id_mult$ENSEMBL)
+
+col_DE_verHPN_FC_wide <- col_DE_verHPN_FC %>% select(SYMBOL,log2FoldChange, Cellline) %>%pivot_wider(names_from = Cellline, values_from = log2FoldChange)
+
+col_DE_verHPN_FC_wide2 <- as.data.frame(col_DE_verHPN_FC_wide)
+rownames(col_DE_verHPN_FC_wide2) <- col_DE_verHPN_FC_wide2$SYMBOL
+
+
+col_DE_verHPN_FC_wide3 <- col_DE_verHPN_FC_wide2[,-1]
+col_DE_verHPN_FC_wide3[is.na(col_DE_verHPN_FC_wide3)] <- 0
+
+pheatmap(as.matrix(col_DE_verHPN_FC_wide3), na_col = "grey", fontsize_row = 0, fontsize_col = 14, breaks = c(-10,-1,0,1, 10), color = c("darkblue","lightblue","white","orange","red"))
+
+
+
+
+```
+
+
+```{r}
+##check & run
+
+#PN to MES sel cell lines
+
+col_DE_verH_MES_FC <- col_comB_deG %>% filter(ENSEMBL %in% verH_MES_geneL_id_mult$ENSEMBL)
+
+col_DE_verH_MES_FC_wide <- col_DE_verH_MES_FC %>% filter(Cellline %in% c("SN649", "SN753", "SN667", "SN674", "SN521", "SN579","SN533")) %>% select(SYMBOL,log2FoldChange, Cellline) %>% pivot_wider(names_from = Cellline, values_from = log2FoldChange)
+
+col_DE_verH_MES_FC_wide2 <- as.data.frame(col_DE_verH_MES_FC_wide)
+rownames(col_DE_verH_MES_FC_wide2) <- col_DE_verH_MES_FC_wide2$SYMBOL
+
+
+col_DE_verH_MES_FC_wide3 <- col_DE_verH_MES_FC_wide2[,-1]
+col_DE_verH_MES_FC_wide3[is.na(col_DE_verH_MES_FC_wide3)] <- 0
+
+pheatmap(as.matrix(col_DE_verH_MES_FC_wide3), na_col = "grey", fontsize_row = 0, fontsize_col = 14, breaks = c(-10,-1,0,1, 10), color = c("darkblue","lightblue","white","orange","red"))
+
+col_DE_verHPN_FC_wide4 <- col_DE_verHPN_FC_wide3[,c("SN649", "SN753", "SN667", "SN674", "SN521", "SN579","SN533")]
+
+pheatmap(as.matrix(col_DE_verHPN_FC_wide4), na_col = "grey", fontsize_row = 0, fontsize_col = 14, breaks = c(-10,-1,0,1, 10), color = c("darkblue","lightblue","white","orange","red"))
+
+
+
+```
+
+
+ col_TT
+         Drug Cell line              p-value          Gene ratio
+1  Colchicine      <NA>                    1 0.00427350427350427
+2  Colchicine     SN553                    1 0.00427350427350427
+3  Colchicine     SN528    0.999999999999727  0.0128205128205128
+4  Colchicine     SN735    0.987877557016408   0.094017094017094
+5  Colchicine     SN667 1.15139239354788e-10   0.303418803418803
+6  Colchicine     SN747                    1 0.00427350427350427
+7  Colchicine     SN756    0.999999998235868  0.0299145299145299
+8  Colchicine     SN753    0.889554775290185   0.115384615384615
+9  Colchicine     SN517    0.999999990238833  0.0341880341880342
+10 Colchicine     SN575    0.147142706808873   0.166666666666667
+11 Colchicine     SN521  2.1173075012756e-09   0.290598290598291
+12 Colchicine     SN810    0.948305311993702   0.106837606837607
+13 Colchicine     SN767    0.999113141778407  0.0769230769230769
+14 Colchicine     SN533    0.669953672311703   0.132478632478632
+15 Colchicine     SN505    0.999999999996431  0.0170940170940171
+16 Colchicine     SN529    0.999999990238833  0.0341880341880342
+17 Colchicine     SN534                    1                   0
+18 Colchicine     SN520    0.523306805923424   0.141025641025641
+19 Colchicine     SN503    0.736647545409909   0.128205128205128
+20 Colchicine     SN674    0.147142706808873   0.166666666666667
+21 Colchicine     SN649 7.33406209793002e-05   0.235042735042735
+22 Colchicine     SN579 1.33316791665288e-08   0.282051282051282
+
+```{r}
+
+
+#DE gene set: regVg_TF [4199]
+#PN gene set: modGL [185]
+#MES gene set: modGL [234] verH_MES_geneL_id_mult$ENSEMBL
+#Total genes: 44606 uniBk
+#intersect between DE gene and gene set - matc_st9Lst1H_TF [51]
+#overA = uniBk - regVg_TF [40407]
+#inte = matc_st9Lst1H_TF -1
+
+#phy_sigTF <- phyper(q = inte, m = regVg_TF, n = overA, k = modGL, lower.tail = FALSE )
+#gene_rat_TF <- length(unique(TF_regmodGV$gene_short_name))/length(TF_regSig_genL)
+
+
+#dsf_DE_verH_MES_FC  dsf_comB_deG
+
+#Colchicine
+
+cells_colLt <- unique(col_comB_deG$Cellline)
+#regVg_TF #vary by cell line
+#intDEmesG <- unique(dsf_DE_verH_MES_FC$ENSEMBL) # vary by cell line
+#modGL <- length(verH_MES_geneL_id_mult$ENSEMBL)
+#uniBk <- c(44606) 
+#overA = uniBk - regVg_TF 
+#inte = intDEmesG -1
+
+col_comB_deG_listO <- rbind(length(unique(sn553_DE_col$ENSEMBL)), length(unique(sn528_DE_col$ENSEMBL)), length(unique(sn735_DE_col$ENSEMBL)), length(unique(sn667_DE_col$ENSEMBL)), length(unique(sn747_DE_col$ENSEMBL)), length(unique(sn756_DE_col$ENSEMBL)), length(unique(sn753_DE_col$ENSEMBL)), length(unique(sn517_DE_col$ENSEMBL)), length(unique(sn575_DE_col$ENSEMBL)), length(unique(sn521_DE_col$ENSEMBL)), length(unique(sn810_DE_col$ENSEMBL)), length(unique(sn767_DE_col$ENSEMBL)), length(unique(sn533_DE_col$ENSEMBL)), length(unique(sn505_DE_col$ENSEMBL)), length(unique(sn529_DE_col$ENSEMBL)), length(unique(sn534_DE_col$ENSEMBL)), length(unique(sn520_DE_col$ENSEMBL)), length(unique(sn503_DE_col$ENSEMBL)), length(unique(sn674_DE_col$ENSEMBL)), length(unique(sn649_DE_col$ENSEMBL)), length(unique(sn579_DE_col$ENSEMBL)))
+
+
+for(g in 1:length(cells_colLt)){
+  Deg_TF <- col_comB_deG %>% filter(Cellline %in% cells_colLt[g])
+  regVg_TF <- col_comB_deG_listO[g,1]
+  comG <- col_comB_deG %>% filter(ENSEMBL %in% verH_MES_geneL_id_mult$ENSEMBL & Cellline %in% cells_colLt[g])
+  intDEmesG <- length(comG$ENSEMBL)
+  overA = uniBk - regVg_TF 
+  inte = intDEmesG -1
+  pval_hper <- phyper(q = inte, m = regVg_TF, n = overA, k = modGL, lower.tail = FALSE )
+  gr_mes <- intDEmesG/modGL
+  hp_stat <- cbind("Colchicine", cells_colLt[g], pval_hper, gr_mes, regVg_TF, intDEmesG)
+  colnames(hp_stat) <- c("Drug","Cell line", "p-value","Gene ratio","DiffG","Match" )
+  des_mesT <- rbind(des_mesT, hp_stat)
+}
+  
+#disF_TT <-as.data.frame(des_mesT)
+
+
+
+
+
+
+```
+
+col_TT %>% filter(`Gene ratio` > 0.1)
+         Drug Cell line              p-value        Gene ratio
+1  Colchicine     SN667 1.15139239354788e-10 0.303418803418803
+2  Colchicine     SN753    0.889554775290185 0.115384615384615
+3  Colchicine     SN575    0.147142706808873 0.166666666666667
+4  Colchicine     SN521  2.1173075012756e-09 0.290598290598291
+5  Colchicine     SN810    0.948305311993702 0.106837606837607
+6  Colchicine     SN533    0.669953672311703 0.132478632478632
+7  Colchicine     SN520    0.523306805923424 0.141025641025641
+8  Colchicine     SN503    0.736647545409909 0.128205128205128
+9  Colchicine     SN674    0.147142706808873 0.166666666666667
+10 Colchicine     SN649 7.33406209793002e-05 0.235042735042735
+11 Colchicine     SN579 1.33316791665288e-08 0.282051282051282
+
+
+
+
+
+
+#Disulfiram
+
+
+
+
+7. ANALYZING CANCER HALLMARKS IN DISULFIRAM TREATED SAMPLES #check code & run
+
+
+```{r}
+##Hallmark for UP genes only
+DEgenes_dsfO <- c()
+
+#resT_dir <- "/users/imukherj/omics4tb2/ishitaM/GBM_R01_Swedish/DrugRNAseq/BR_anal"
+#cells_sampM <- unique(meta_set1to6_allE2$Cell.Line)
+
+for(i in 1:length(cells_sampM)){
+  fil_DEres <- paste(resT_dir,cells_sampM[i],"DE_disulfiram.txt", sep="/")
+  
+  resF_dsf <- read.table(fil_DEres, header = T) 
+  cell_DE_dsf <- resF_dsf %>% filter(padj < 0.05 & log2FoldChange > 1) %>% arrange(desc(padj)) %>% select(ENSEMBL)
+  ltNam <- paste("dsf",i, sep = "_")
+  DEgenes_dsfO[[cells_sampM[i]]] <- list(ltNam = cell_DE_dsf$ENSEMBL)
+  
+  }
+
+
+
+
+
+```
+
+
+
+```{r}
+
+dsf_regsFuncAll <-c()
+dsf_hallM <- c()
+
+cell_line_no <- length(DEgenes_dsfO)
+
+for(i in 1:length(DEgenes_dsfO)){
+  cell_name <- names(DEgenes_dsfO)
+
+  DE_genes_dsf <- DEgenes_dsfO[[cell_name[i]]]$ltNam
+  
+  
+  ##Reactome
+  gen_ID_dsf = bitr(DE_genes_dsf, fromType="ENSEMBL", toType="ENTREZID", OrgDb="org.Hs.eg.db")
+  rct_dsf <- enrichPathway(gene=gen_ID_dsf$ENTREZID, pvalueCutoff = 0.05, readable=TRUE)
+ #head(x)
+
+  ##GO BP
+ego_dsf <- enrichGO(gene   = gen_ID_dsf$ENTREZID,
+                OrgDb  = org.Hs.eg.db,
+               ont  = "BP",
+               pAdjustMethod = "BH",
+               pvalueCutoff  = 0.01,
+               qvalueCutoff  = 0.05,
+               readable      = TRUE)
+
+
+go_mf_dsf <- enrichGO(gene = gen_ID_dsf$ENTREZID,
+                OrgDb = org.Hs.eg.db,
+               ont  = "MF",
+               pAdjustMethod = "BH",
+               pvalueCutoff  = 0.01,
+               qvalueCutoff  = 0.05,
+               readable      = TRUE)
+
+
+## KEGG
+
+kk_dsf <- enrichKEGG(gene = gen_ID_dsf$ENTREZID,
+                  organism   = 'hsa',
+                  pvalueCutoff = 0.05)
+
+#regID_ot <- regulonLst$Regulon.ID[i]
+
+## MsigDB hallmarks
+
+gen_sym_dsf = bitr(DE_genes_dsf, fromType="ENSEMBL", toType="SYMBOL", OrgDb="org.Hs.eg.db")
+
+riches_dsf <- enricher(gene=gen_sym_dsf$SYMBOL, TERM2GENE= h_t2g, pvalueCutoff = 0.05, minGSSize = 50, qvalueCutoff = 0.1, pAdjustMethod = "bonferroni" )
+hall_msig_dsf <- as.data.frame(riches_dsf)
+
+   kegg_rich_dsf <- c()
+   React_rich_dsf <- c()
+   gobp_rich_dsf <- c()
+   gomf_rich_dsf <- c()
+   hall_rich_dsf <- c()
+   
+   if(!is.null(kk_dsf)){
+   kegg_rich_dsf <- cbind(cell_name[i],"Kegg", kk_dsf[1:20,])
+   }
+   if(!is.null(rct_dsf)){
+   React_rich_dsf <- cbind(cell_name[i],"Reactome", rct_dsf[1:20,])
+   }
+   if(!is.null(ego_dsf)){
+   gobp_rich_dsf <- cbind(cell_name[i],"GObp",ego_dsf[1:20,])
+   }
+   if(!is.null(go_mf_dsf)){
+     gomf_rich_dsf <- cbind(cell_name[i],"GOmf",go_mf_dsf[1:20,])
+   }
+   if(is.data.frame(hall_msig_dsf) & nrow(hall_msig_dsf) != 0){
+     
+     hall_rich_dsf <- cbind(cell_name[i],"Msig_hall", hall_msig_dsf)
+   }
+   
+   
+   if(!is.null(kegg_rich_dsf)){
+   names(kegg_rich_dsf) <- c("Cell_line","Category","Description", "GeneRatio", "BgRatio", "pvalue", "p.adjust", "qvalue", "geneID","Count")
+   }
+   if(!is.null(React_rich_dsf)){
+   names(React_rich_dsf) <- c("Cell_line","Category","Description", "GeneRatio", "BgRatio", "pvalue", "p.adjust", "qvalue", "geneID","Count")
+   }
+   if(!is.null(gobp_rich_dsf)){
+   names(gobp_rich_dsf) <- c("Cell_line","Category","Description", "GeneRatio", "BgRatio", "pvalue", "p.adjust", "qvalue", "geneID","Count")
+   }
+   if(is.data.frame(hall_msig_dsf) & nrow(hall_msig_dsf) != 0){
+    names(hall_rich_dsf) <- c("Cell_line","Category","Description", "GeneRatio", "BgRatio", "pvalue", "p.adjust", "qvalue", "geneID","Count") 
+     
+   }
+   
+   dsf_regsFuncAll <- rbind(dsf_regsFuncAll, kegg_rich_dsf, React_rich_dsf, gobp_rich_dsf)
+   dsf_hallM <- rbind(dsf_hallM, hall_rich_dsf)
+}
+
+
+write.table(dsf_regsFuncAll,"Res_gseaR/S1to6_EnrichPathst10_disulfiram.txt")
+write.table(dsf_hallM, "Res_gseaR/S1to6_Msig_hallmark_disulfiram.txt" )
+
+
+
+
+```
+
+SUBSETTING EMT HALLMARK GENES AND CELL LINES EXHIBITING EMT (Disulfiram)
+
+#filtering criteria for cell lines showing EMT
+
+Gene ratio > 0.1 or gene count > 50
+
+```{r}
+
+dsf_hall_rev <- read.table("Res_gseaR/S1to6_Msig_hallmark_colchicine.txt", header = T)
+colnames(dsf_hall_rev) <- c("Cell_line","Category","Description","Pathway","GeneRatio","BgRatio","pvalue","p.adjust","qvalue","geneID","Count")
+
+dsf_hall_rev_filt <- dsf_hall_rev %>% filter(Description == "HALLMARK_EPITHELIAL_MESENCHYMAL_TRANSITION" & p.adjust < 0.05) %>% separate(GeneRatio, sep = "/", into = c("GeneNo","CategoryNo")) %>% mutate(GRatio = as.numeric(GeneNo)/as.numeric(CategoryNo)) %>% filter(GRatio > 0.1 | Count > 50)
+
+dsf_hall_rev_filt %>% select(Cell_line)
+
+dsf_hall_rev_filtA <- dsf_hall_rev_filt %>% mutate(gene_list = str_replace_all(geneID, "/", ",")) %>% select(Cell_line, gene_list)
+
+dsf_hall_rev_filtB <- dsf_hall_rev_filtA %>% separate_rows(gene_list)
+
+dsf_hall_rev_geneL <- unique(dsf_hall_rev_filtB$gene_list)
+
+```
+
+
+```{r}
+
+sn503_DE_dsf <- sn503_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN503")
+
+sn505_DE_dsf <- sn505_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN505")
+
+sn508_DE_dsf <- sn508_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN508")
+
+sn520_DE_dsf <- sn520_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN520")
+
+
+sn533_DE_dsf <- sn533_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN533")
+
+
+sn575_DE_dsf <- sn575_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN575")
+
+sn579_DE_dsf <- sn579_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN579")
+
+sn674_DE_dsf <- sn674_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN674")
+
+sn677_DE_dsf <- sn677_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN677")
+
+sn753_DE_dsf <- sn753_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN753")
+
+sn756_DE_dsf <- sn756_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN756")
+
+sn810_DE_dsf <- sn810_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN810")
+
+
+sn517_DE_dsf <- sn517_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN517")
+
+
+sn521_DE_dsf <- sn521_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN521")
+
+
+sn528_DE_dsf <- sn528_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN528")
+
+
+sn529_DE_dsf <- sn529_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN529")
+
+
+sn534_DE_dsf <- sn534_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN534")
+
+sn553_DE_dsf <- sn553_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN553")
+
+
+sn649_DE_dsf <- sn649_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN649")
+
+
+sn667_DE_dsf <- sn667_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN667")
+
+
+sn735_DE_dsf <- sn735_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN735")
+
+
+sn747_DE_dsf <- sn747_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN747")
+
+
+sn767_DE_dsf <- sn767_dsf %>% filter((padj < 0.05 & log2FoldChange > 1) | (padj < 0.05 & log2FoldChange < -1)) %>% arrange(desc(padj)) %>% mutate(Cellline = "SN767")
+
+dsf_comB_deG <- rbind(sn553_DE_dsf, sn528_DE_dsf, sn735_DE_dsf, sn667_DE_dsf, sn747_DE_dsf, sn756_DE_dsf, sn753_DE_dsf, sn517_DE_dsf, sn575_DE_dsf, sn521_DE_dsf, sn810_DE_dsf, sn767_DE_dsf, sn533_DE_dsf, sn505_DE_dsf, sn677_DE_dsf, sn529_DE_dsf, sn534_DE_dsf, sn520_DE_dsf, sn503_DE_dsf, sn508_DE_dsf, sn674_DE_dsf, sn649_DE_dsf, sn579_DE_dsf)
+
+```
+
+
+```{r}
+
+## EMT hallmark genes
+dsf_hall_rev_geneL_id_mult <- bitr(dsf_hall_rev_geneL, fromType="SYMBOL", toType=c("ENTREZID", "ENSEMBL","GENENAME"), OrgDb="org.Hs.eg.db")
+
+dsf_DE_EMTg_FC <- dsf_comB_deG %>% filter(Cellline %in% dsf_hall_rev_filt$Cell_line & ENSEMBL %in% dsf_hall_rev_geneL_id_mult$ENSEMBL)
+
+dsf_DE_EMTg_FC_wide <- dsf_DE_EMTg_FC %>% select(ENSEMBL,log2FoldChange, Cellline) %>%pivot_wider(names_from = Cellline, values_from = log2FoldChange)
+
+dsf_DE_EMTg_FC_wide2 <- as.data.frame(dsf_DE_EMTg_FC_wide)
+rownames(dsf_DE_EMTg_FC_wide2) <- dsf_DE_EMTg_FC_wide2$ENSEMBL
+
+
+dsf_DE_EMTg_FC_wide3 <- dsf_DE_EMTg_FC_wide2[,-1]
+dsf_DE_EMTg_FC_wide3[is.na(dsf_DE_EMTg_FC_wide3)] <- 0
+
+pheatmap(as.matrix(dsf_DE_EMTg_FC_wide3), na_col = "grey", fontsize_row = 0, fontsize_col = 14, breaks = c(-10,-1,0,1, 10), color = c("darkblue","lightblue","white","orange","red"))
+
+
+```
+
+
+```{r}
+
+## Neftel marker genes
+
+#neftelM_geneL_id_mult <- bitr(neftel_markMES, fromType="SYMBOL", toType=c("ENTREZID", "ENSEMBL","GENENAME"), OrgDb="org.Hs.eg.db")
+
+dsf_DE_Neftelg_FC <- dsf_comB_deG %>% filter(ENSEMBL %in% neftelM_geneL_id_mult$ENSEMBL)
+
+dsf_DE_Neftelg_FC_wide <- dsf_DE_Neftelg_FC %>% select(SYMBOL,log2FoldChange, Cellline) %>%pivot_wider(names_from = Cellline, values_from = log2FoldChange)
+
+dsf_DE_Neftelg_FC_wide2 <- as.data.frame(dsf_DE_Neftelg_FC_wide)
+rownames(dsf_DE_Neftelg_FC_wide2) <- dsf_DE_Neftelg_FC_wide2$SYMBOL
+
+
+dsf_DE_Neftelg_FC_wide3 <- dsf_DE_Neftelg_FC_wide2[,-1]
+dsf_DE_Neftelg_FC_wide3[is.na(dsf_DE_Neftelg_FC_wide3)] <- 0
+
+pheatmap(as.matrix(dsf_DE_Neftelg_FC_wide3), na_col = "grey", fontsize_row = 0, fontsize_col = 14, breaks = c(-10,-1,0,1, 10), color = c("darkblue","lightblue","white","orange","red"))
+
+
+
+
+```
+
+
+```{r}
+
+dsf_DE_verHPN_FC <- dsf_comB_deG %>% filter(ENSEMBL %in% verH_PN_geneL_id_mult$ENSEMBL)
+
+dsf_DE_verHPN_FC_wide <- dsf_DE_verHPN_FC %>% select(SYMBOL,log2FoldChange, Cellline) %>%pivot_wider(names_from = Cellline, values_from = log2FoldChange)
+
+dsf_DE_verHPN_FC_wide2 <- as.data.frame(dsf_DE_verHPN_FC_wide)
+rownames(dsf_DE_verHPN_FC_wide2) <- dsf_DE_verHPN_FC_wide2$SYMBOL
+
+
+dsf_DE_verHPN_FC_wide3 <- dsf_DE_verHPN_FC_wide2[,-1]
+dsf_DE_verHPN_FC_wide3[is.na(dsf_DE_verHPN_FC_wide3)] <- 0
+
+pheatmap(as.matrix(dsf_DE_verHPN_FC_wide3), na_col = "grey", fontsize_row = 0, fontsize_col = 14, breaks = c(-10,-1,0,1, 10), color = c("darkblue","lightblue","white","orange","red"))
+
+
+
+```
+
+
+
+```{r}
+
+##check & run
+
+#PN to MES sel cell lines
+
+dsf_DE_verH_MES_FC <- dsf_comB_deG %>% filter(ENSEMBL %in% verH_MES_geneL_id_mult$ENSEMBL)
+
+dsf_DE_verH_MES_FC_wide <- dsf_DE_verH_MES_FC %>% filter(Cellline %in% c("SN521", "SN505")) %>% select(SYMBOL,log2FoldChange, Cellline) %>% pivot_wider(names_from = Cellline, values_from = log2FoldChange)
+
+dsf_DE_verH_MES_FC_wide2 <- as.data.frame(dsf_DE_verH_MES_FC_wide)
+rownames(dsf_DE_verH_MES_FC_wide2) <- dsf_DE_verH_MES_FC_wide2$SYMBOL
+
+
+dsf_DE_verH_MES_FC_wide3 <- dsf_DE_verH_MES_FC_wide2[,-1]
+dsf_DE_verH_MES_FC_wide3[is.na(dsf_DE_verH_MES_FC_wide3)] <- 0
+
+pheatmap(as.matrix(dsf_DE_verH_MES_FC_wide3), na_col = "grey", fontsize_row = 0, fontsize_col = 14, breaks = c(-10,-1,0,1, 10), color = c("darkblue","lightblue","white","orange","red"))
+
+dsf_DE_verHPN_FC_wide4 <- dsf_DE_verHPN_FC_wide3[,c("SN521", "SN505")]
+
+pheatmap(as.matrix(dsf_DE_verHPN_FC_wide4), na_col = "grey", fontsize_row = 0, fontsize_col = 14, breaks = c(-10,-1,0,1, 10), color = c("darkblue","lightblue","white","orange","red"))
+
+
+
+```
+
+
+
+```{r}
+
+#DE gene set: regVg_TF [4199]
+#PN gene set: modGL [185]
+#MES gene set: modGL [234] verH_MES_geneL_id_mult$ENSEMBL
+#Total genes: 44606 uniBk
+#intersect between DE gene and gene set - matc_st9Lst1H_TF [51]
+#overA = uniBk - regVg_TF [40407]
+#inte = matc_st9Lst1H_TF -1
+
+#phy_sigTF <- phyper(q = inte, m = regVg_TF, n = overA, k = modGL, lower.tail = FALSE )
+#gene_rat_TF <- length(unique(TF_regmodGV$gene_short_name))/length(TF_regSig_genL)
+
+
+#dsf_DE_verH_MES_FC  dsf_comB_deG
+
+#Disulfiram
+
+dsf_comB_deG_listO <- rbind(length(unique(sn735_DE_dsf$ENSEMBL)), length(unique(sn667_DE_dsf$ENSEMBL)), length(unique(sn747_DE_dsf$ENSEMBL)), length(unique(sn756_DE_dsf$ENSEMBL)), length(unique(sn517_DE_dsf$ENSEMBL)), length(unique(sn575_DE_dsf$ENSEMBL)), length(unique(sn521_DE_dsf$ENSEMBL)), length(unique(sn810_DE_dsf$ENSEMBL)), length(unique(sn767_DE_dsf$ENSEMBL)), length(unique(sn533_DE_dsf$ENSEMBL)), length(unique(sn505_DE_dsf$ENSEMBL)), length(unique(sn677_DE_dsf$ENSEMBL)), length(unique(sn529_DE_dsf$ENSEMBL)), length(unique(sn534_DE_dsf$ENSEMBL)), length(unique(sn520_DE_dsf$ENSEMBL)), length(unique(sn503_DE_dsf$ENSEMBL)), length(unique(sn508_DE_dsf$ENSEMBL)), length(unique(sn674_DE_dsf$ENSEMBL)), length(unique(sn649_DE_dsf$ENSEMBL)), length(unique(sn579_DE_dsf$ENSEMBL)))
+
+cells_dsfLt <- unique(dsf_comB_deG$Cellline)
+#regVg_TF #vary by cell line
+#intDEmesG <- unique(dsf_DE_verH_MES_FC$ENSEMBL) # vary by cell line
+modGL <- length(verH_MES_geneL_id_mult$ENSEMBL)
+uniBk <- c(44606) 
+overA = uniBk - regVg_TF 
+inte = intDEmesG -1
+
+
+for(g in 1:length(cells_dsfLt)){
+  Deg_TF <- dsf_comB_deG %>% filter(Cellline %in% cells_dsfLt[g])
+  regVg_TF <- dsf_comB_deG_listO[g,1]
+  comG <- dsf_comB_deG %>% filter(ENSEMBL %in% verH_MES_geneL_id_mult$ENSEMBL & Cellline %in% cells_dsfLt[g])
+  intDEmesG <- length(comG$ENSEMBL)
+  overA = uniBk - regVg_TF 
+  inte = intDEmesG -1
+  pval_hper <- phyper(q = inte, m = regVg_TF, n = overA, k = modGL, lower.tail = FALSE )
+  gr_mes <- intDEmesG/modGL
+  hp_stat <- cbind("Disulfiram", cells_dsfLt[g], pval_hper, gr_mes, regVg_TF, intDEmesG)
+  colnames(hp_stat) <- c("Drug","Cell line", "p-value","Gene ratio","DiffG","Match")
+  des_mesT <- rbind(des_mesT, hp_stat)
+}
+  
+#disF_TT <-as.data.frame(des_mesT)
+
+```
+
+disF_TT %>% filter(`p-value` < 0.05)
+        Drug Cell line              p-value        Gene ratio
+1 Disulfiram     SN505 0.000891295067608497 0.115384615384615
+
+
+disF_TT %>% filter(`Gene ratio` > 0.1)
+        Drug Cell line              p-value        Gene ratio
+1 Disulfiram     SN521 1.67919824148773e-06 0.145299145299145
+2 Disulfiram     SN505 0.000891295067608497 0.115384615384615
+
+
+disF_TT 
+         Drug Cell line              p-value          Gene ratio
+1  Disulfiram      <NA>      0.9999920080545 0.00854700854700855
+2  Disulfiram     SN735      0.9999920080545 0.00854700854700855
+3  Disulfiram     SN667      0.9999920080545 0.00854700854700855
+4  Disulfiram     SN747    0.972804752234993  0.0341880341880342
+5  Disulfiram     SN756                    1                   0
+6  Disulfiram     SN517    0.999936031483222  0.0128205128205128
+7  Disulfiram     SN575    0.999658548773341  0.0170940170940171
+8  Disulfiram     SN521 1.67919824148773e-06   0.145299145299145
+9  Disulfiram     SN810      0.9999920080545 0.00854700854700855
+10 Disulfiram     SN767      0.9999920080545 0.00854700854700855
+11 Disulfiram     SN533                    1                   0
+12 Disulfiram     SN505 0.000891295067608497   0.115384615384615
+13 Disulfiram     SN677    0.999999500862515 0.00427350427350427
+14 Disulfiram     SN529      0.9999920080545 0.00854700854700855
+15 Disulfiram     SN534    0.751255520676698  0.0512820512820513
+16 Disulfiram     SN520    0.999999500862515 0.00427350427350427
+17 Disulfiram     SN503    0.998631767593122  0.0213675213675214
+18 Disulfiram     SN508    0.999936031483222  0.0128205128205128
+19 Disulfiram     SN674                    1                   0
+20 Disulfiram     SN649    0.835313601289228   0.047008547008547
+21 Disulfiram     SN579    0.988214254102505  0.0299145299145299
