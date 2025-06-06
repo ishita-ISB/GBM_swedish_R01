@@ -1,0 +1,133 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+library(openxlsx)
+library(tidyr)
+library(dplyr)
+library(missMethods)
+library(reshape)
+library(pheatmap)
+library(ggplot2)
+options(bitmapType = "cairo")
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+
+```{r}
+auc_CalcP <-read.csv("/mnt/kazuki/GBM/Introduction/HTS/CAlculated_AUC.csv", header = T)
+ic50_CalcP <-read.csv("/mnt/kazuki/GBM/Introduction/HTS/IC50_alldrugsCellLines_PGx.csv", header = T)
+
+patient_met <- read.table("/mnt/kazuki/GBM/Introduction/Patient_info_metadata.txt", sep = ",", header = T, row.names = 1)
+drug_met <- read.table("/mnt/kazuki/GBM/Introduction/Drug_info_metadata.txt", sep = ",", header = T, row.names = 1)
+```
+
+
+
+```{r}
+
+ic50uM_L <- melt(ic50_CalcP)
+colnames(ic50uM_L)<- c("Drug","Patient","IC50uM")
+ic50uM_L$IC50uM <- ic50uM_L$IC50uM*1000000
+ic50uM_L  <- drop_na(ic50uM_L)
+
+```
+
+
+```{r}
+sel_cell_Line <- c("SN649","SN667","SN677")
+drugsLty <- c("SIMVASTATIN","DISULFIRAM + 0.5ΜM CUSO4","PITAVASTATIN","SERTRALINE","MEFLOQUINE","ALBENDAZOLE","MITOXANTRONE HCI","AURANOFIN","BORTEZOMIB","COLCHICINE")
+```
+
+
+
+```{r}
+valuei <- ic50uM_L %>% filter(Drug %in% drugsLty & Patient %in% sel_cell_Line & IC50uM <= 100)
+ggplot(valuei, aes(x= Patient, y = IC50uM)) + geom_boxplot() +theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust= 1), axis.text = element_text(size = 18), axis.title = element_text(size= 20))
+ggplot(valuei, aes(x= Drug, y = IC50uM)) + geom_boxplot() +theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust= 1), axis.text = element_text(size = 18), axis.title = element_text(size= 20))
+```
+
+
+```{r}
+
+auc_L <- melt(auc_CalcP)
+colnames(auc_L)<- c("Drug","Patient","AUC")
+auc_L  <- drop_na(auc_L)
+head(auc_L)
+```
+
+
+```{r}
+valueA <- auc_L %>% filter(Drug %in% drugsLty & Patient %in% sel_cell_Line)
+ggplot(valueA, aes(x= Patient, y = AUC)) + geom_boxplot() +theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust= 1), axis.text = element_text(size = 18), axis.title = element_text(size= 20))
+ggplot(valueA, aes(x= Drug, y = AUC)) + geom_boxplot() +theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust= 1), axis.text = element_text(size = 18), axis.title = element_text(size= 20))
+```
+
+
+```{r}
+ic50um_W100<- spread(valuei, Patient, IC50uM)
+rownames(ic50um_W100) <- ic50um_W100$Drug
+ic50um_W100 <- ic50um_W100[,-1]
+ic50um_W100imp <- impute_median(ic50um_W100, type = "columnwise",ordered_low = FALSE)
+
+rownames(drug_met) <-  toupper(gsub("_", " ", rownames(drug_met)))
+drug_metSel <- drug_met %>% filter(rownames(drug_met) %in% drugsLty)
+patient_metSel <- patient_met %>% filter(rownames(patient_met) %in% sel_cell_Line)
+pheatmap(ic50um_W100imp, cluster_rows = T, cluster_cols = F, fontsize = 10.5, annotation_row = drug_met, annotation_col = patient_met, breaks = c(0,5,10,20,100), color = c("pink","orange","lightblue","lightgreen"))
+```
+
+
+
+```{r}
+auc_W<- spread(valueA, Patient, AUC)
+rownames(auc_W) <- auc_W$Drug
+auc_W <- auc_W[,-1]
+pheatmap(auc_W, cluster_rows = T, cluster_cols = F, fontsize = 10.5, annotation_row = drug_met, annotation_col = patient_met, breaks = c(0,5,10,20,40), color = c("lightblue","lightgreen","pink","orange"))
+```
+
+
+```{r}
+pheatmap(exp_dat, cluster_rows = T, cluster_cols = F, fontsize = 10.5, annotation_row = drug_met, breaks = c(0,5,10,20,100), color = c("pink","orange","lightblue","lightgreen"))
+```
+
+
+```{r}
+
+for(i in 1:length(drugsLty)){
+  print(drugsLty[i])
+  print(drug_thresh[i])
+  ic50_res <- ic50uM_L %>% filter(Drug == drugsLty[i]) %>% mutate(IC50uM = case_when(IC50uM > drug_thresh[i] ~ 0, 
+                                                                       IC50uM < drug_thresh[i] ~ 1))
+  ic50_response_bin <- rbind(ic50_response_bin,ic50_res)
+  
+}
+
+
+```
+
+
+```{r}
+
+for(i in 1:length(drugsLty2)){
+  print(drugsLty2[i])
+  print(drug_thresh_sel[i])
+  ic50_res2 <- ic50uM_L %>% filter(Drug == drugsLty2[i]) %>% mutate(IC50uM = case_when(IC50uM > drug_thresh_sel[i] ~ 0,  IC50uM < drug_thresh_sel[i] ~ 1))
+  ic50_response_bin2 <- rbind(ic50_response_bin2,ic50_res2)
+  
+}
+
+
+```
+

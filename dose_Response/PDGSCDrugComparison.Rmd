@@ -1,0 +1,415 @@
+---
+title: "PDGSC Drug Comparison"
+author: "Abran Nicolas"
+date: '2022-08-10'
+output: html_document
+---
+
+```{r SetDirectory, include=FALSE}
+##If code is not working,
+##set directory below to the project analysis folder
+knitr::opts_knit$set(root.dir = "C:/Users/anico/Documents/AbranInternship/gbmMINER-PDGSC-Validation/analysis")
+```
+
+# **Description**
+
+The goal of this project is to validate gbmMINER drug-specific regulon activity of patient-derived glioma stem cells (PDGSCs) against a high throughput screen (HTS) supplied by Swedish.
+
+# **Workflow**
+
+## Input Data {.tabset}
+
+### PDGSC Drug Response Curves
+
+Dataset includes percent viability of the experimental PDGSC group as a function of drug dosage. 79 drugs are screened across 35 patients, with three replicates for each patient. Because drug dosage levels increase exponentially,the log of each drug dosage is calculated. When displaying these curves, the average percent viability at each drug dosage is calculated and fitted using a generalized additive model.
+
+
+### PDGSC experimental HTS Drug Screen
+
+Dataset includes area under the curve (AUC) values based on drug response curves of the experimental PDGSC group. A high AUC value suggests worse response to a given drug, because either percent viability does not decrease or it takes a higher dose to see an effect on percent viability. Data are pre-processed and converted to 1-AUC so that high 1-AUC values suggest better drug response, while low 1-AUC values suggest worse drug response.
+
+### PDGSC gbmMINER Predicted Network Activity
+
+Dataset includes the relative expression of the regulon targets of different drugs included in the PDGSC screen within the experimental PDGSC group. These values range from -1 to 1, with values closer to 1 representing higher expression of drug target regulons, with values closer to -1 representing lower expression. Notably, this dataset only includes 61 of the 79 drugs in the whole screen, which is why subsequent analysis only includes 61 drugs.
+
+### TCGA gbmMINER Predicted Network Activity
+
+Dataset includes the relative expression of the regulon targets of different drugs included in the PDGSC screen within The Cancer Genome Atlas (TCGA) cohort. These values range from -1 to 1, with values closer to 1 representing higher expression of drug target regulons, with values closer to -1 representing lower expression.
+
+### OpenTargets Drug Details
+Dataset includes information about each drug, specifically the molecule type and the mechanism such as an antagonist or agonist. Because different drugs use a number of naming conventions, this dataset is processed so that blockers and inhibitors are relabelled as antagonists, while openers are relabelled as agonists.
+
+### Drug Ranking Data
+Dataset includes various metadata for each drug included in the screen, such as max trial phase, recommendation for treatment, and trade names.
+
+## Patient Classification and Coherence
+
+Patients are categorized as a nonresponder, neutral, or responder, based on network activity and again based on 1-AUC value. For network activity, 2 cutoffs are assigned based on the total range of that specific drug in the TCGA cohort, dividing that drug's network activity into thirds. PDGSCs which have network activity that falls in the lower third are categorized as nonresponders,  those in the upper third are categorized as responders, and those in the middle third are categorized as neutral. (I.E. if a drug's network activity in the TCGA cohort ranges from -1 to 1, cutoffs would be assigned as -1/3 and 1/3. If a PDGSC patient has network activity of 0.5, they are classified as responder, as it falls within the middle third.
+
+A similar classification is used for 1-AUC values. Instead of using drug specific 1-AUC ranges, their cutoffs are based on the entire range of the experimental PDGSC group's 1-AUC values. (I.E. if all 1-AUC values range from 0.9 to 1, cutoffs would be assigned as 0.9333 and 0.9666. If a patient has 1-AUC value of 0.95, they are assigned as neutral, as it falls within the middle third)
+Patient/drug combinations which have the same categorization as nonresponder, neutral, or responder are considered coherent. Coherence is displayed in both a graph and table format, ordering drugs by the number of coherent members, and a permutation test is performed to find the required number of cohrent members to be considered statistically significant. A heatmap of coherence is also constructed, with red representing coherence between nonresponders, blue for neutral, and green for responders. Non-coherent members remain grey.
+
+## Individual Drug Data
+
+For each drug, a number of figures are shown:
+
+**Network Activity and Response Relationship** - This graph demonstrates potential linear relationships between network activity and 1-AUC values among the experimental PDGSC group.
+
+**Category Specific Distributions** - This graph shows the distribution of 1-AUC values based on network categorization. Noteably, this graph shows the distribution of all patients, regardless of coherence between network activity categorization and 1-AUC categorization.
+
+**Drug Response Curves** - This graph shows the percent viability of PDGSCs as a function of drug dosage. The average percent viability at each dosage level is calculated and plotted using a generalized additive model.
+
+**Drug-Specific TCGA Network Distribution** - This graph shows the distribution of network activity of a specific drug across the TCGA cohort.
+
+**Drug-Specific PDGSC Network Distribution** - This graph shows the distribution of network activity of a specific drug across the experimental PDGSC group.
+
+# **Code** {.unlisted .unnumbered}
+```{r Setup, include=FALSE}
+##Import libraries
+library(tidyverse)
+library(knitr)
+library(rlang)
+##setwd, import data and set groups
+##Note: make sure drugs labelled with "HCl" are labelled with "HCI" (or vice versa), otherwise datasets will not match
+setwd("..")
+pdgscAUC<-read_csv("data/pdgsc_AUC_data.csv")
+  pdgscAUC<-group_by(pdgscAUC,Drug)
+pdgscactivity<-read_csv("data/pdgsc_Network_data.csv")
+  pdgscactivity<-group_by(pdgscactivity,Drug)
+TCGAactivity<-read_csv("data/pdgsc_drug_constrained_network_activity_allcohort.csv")
+  TCGAactivity<-group_by(TCGAactivity,Drug)
+  
+DrugTargets<-read_csv("data/opentargets_hts_drug_details.csv")
+   
+  ##Replace "HCI" with "HCl"
+  DrugTargets$molecule_name<-gsub("HCI","HCl",DrugTargets$molecule_name)
+  
+  ##Isolate drugs for which there are network activity values
+  DrugTargets<-DrugTargets[DrugTargets$molecule_name %in% pdgscactivity$Drug,]
+  DrugTargets<-group_by(DrugTargets[c(1,2,10,11,12)],molecule_name)
+  
+  ##Find unique mechanisms
+  DrugTargets %>% group_by(molecule_name) %>% arrange(molecule_name) %>% filter(row_number()==1)
+  write_csv(DrugTargets,"output/DrugTargets.csv")
+    
+##Import manually formatted version of drug targets
+##Drugs labelled as inhibitor/blocker/antagonist and redefined as antagonist, those labelled
+##as opener are redefined as agonist, etc, for consistency purposes
+DrugTargets<-read_csv("data/DrugTargets_manually_formatted.csv")
+pdgscraw<-read_csv("data/raw_AUC_data_all_PDGSC.csv",col_names=c("Compounds","Replicates","Doses","Sample","PercentViability"))
+  pdgscraw<-group_by(pdgscraw[-1,],Compounds)
+  pdgscraw$Doses<-as.numeric(pdgscraw$Doses)
+  pdgscraw$PercentViability<-as.numeric(pdgscraw$PercentViability)
+  
+  ##Replace "HCI" with "HCl"
+  pdgscraw$Compounds<-gsub("HCI","HCl",pdgscraw$Compounds)
+  
+  ##Isolate drugs for which there are network activity values
+  pdgscraw<-pdgscraw[pdgscraw$Compounds %in% pdgscactivity$Drug,]
+  
+metadata<-read_csv("data/HTS_PDGSC_Drug_Ranking_Table.csv")
+##Calculate 1-AUC
+pdgscOneMinusAUC<-data.frame(pdgscAUC$Drug,1-pdgscAUC[,-1])
+  colnames(pdgscOneMinusAUC)[1]<-c("Drug")
+  pdgscOneMinusAUC<-group_by(pdgscOneMinusAUC,Drug)
+##Helper function for accessing grouped data
+access_group<-function(data,group,ind){
+filter(data,(!!sym(group))==unlist(group_keys(data))[ind])}
+##Rescaling function
+range01<-function(x){(x-min(x))/(max(x)-min(x))}
+##Helper functions to find 1/3 and 2/3 cutoffs
+calc_first_interval<-function(vector){
+  int<-diff(range(vector))/3
+  min<-min(vector)
+  return(min+int)
+}
+calc_second_interval<-function(vector){
+  int<-diff(range(vector))/3
+  min<-min(vector)
+  return(min+(int*2))
+}
+##Classification function
+classify_response<-function(value,cut1,cut2){
+  ylist<-vector(mode="list",length=length(value))
+  for (x in 1:length(value)){
+  if (value[x]<cut1)
+    ylist[x]<--1
+  else if (value[x]>cut2)
+    ylist[x]<-1
+  else 
+    ylist[x]<-0
+  }
+  return(unlist(ylist))
+}
+```
+
+```{r LinearCorrelation, include=FALSE}
+##Create list of graphs showing linear correlation
+pdgscGraphList<-vector(mode="list",length= n_groups(pdgscOneMinusAUC))
+for (x in 1:n_groups(pdgscOneMinusAUC)){
+  df<-bind_cols(
+    data.frame(t(access_group(pdgscOneMinusAUC,"Drug",x)))[-1,],
+    data.frame(t(access_group(pdgscactivity,"Drug",x)))[-1,]
+    )
+  names(df)<-c("OneMinusAUC","NetworkActivity")
+  
+  df$OneMinusAUC<-as.numeric(df$OneMinusAUC)
+  df$NetworkActivity<-as.numeric(df$NetworkActivity)
+  
+  pdgscGraphList[[x]]<-ggplot(df,aes(x=OneMinusAUC,y=NetworkActivity)) + geom_point() + ggtitle(label=paste(group_keys(pdgscOneMinusAUC)$Drug[x],"Network Activity and Response Relationship")) + geom_smooth(formula = y ~ x, method = "lm") + xlab("1-AUC") + ylab("Network Activity")
+}
+```
+
+```{r DrugResponseCurves, include=FALSE}
+##Create drug response curves
+pdgscDRC.graphs.list<-vector(mode="list",length=n_groups(pdgscraw))
+for (x in 1:n_groups(pdgscraw)){
+  df<-bind_cols(access_group(pdgscraw,"Compounds",x))
+  
+  df<-df %>% mutate(Logdose=log(Doses)) %>% group_by(Logdose) %>% mutate(DoseAverage=mean(PercentViability,na.rm=T))
+  
+  pdgscDRC.graphs.list[[x]]<-ggplot(df,aes(x=Logdose,y=PercentViability)) + geom_point() + ggtitle(paste(unlist(group_keys(pdgscraw))[x],"Drug Response Curve")) + geom_smooth(aes(x=Logdose,y=DoseAverage),color="Black") + xlab("Log(Dose)") + ylab("Percent Viability")
+}
+```
+
+```{r TCGAranges, include=FALSE}
+##Sort TCGA network activity
+TCGA.drug.activity.list<-vector(mode="list",length=n_groups(TCGAactivity))
+for (x in 1:n_groups(TCGAactivity)){
+  df<-data.frame(
+    rep(unlist(access_group(TCGAactivity,"Drug",x)[1,1]),(ncol(TCGAactivity)-1)),
+    colnames(TCGAactivity)[-1],
+    t(access_group(TCGAactivity,"Drug",x))[-1,]
+    )
+      names(df)<-c("Drug","Patient","NetworkActivity")
+      
+      df$NetworkActivity<-as.numeric(df$NetworkActivity)
+      TCGA.drug.activity.list[[x]]<-df
+}
+TCGA.drug.activity<-bind_rows(TCGA.drug.activity.list)
+TCGA.drug.activity<-TCGA.drug.activity %>% group_by(Drug) %>% mutate(iqr=IQR(NetworkActivity)) %>% arrange(iqr)
+TCGA.drug.activity<-arrange(TCGA.drug.activity,Drug)
+TCGAranges.graph<-ggplot(TCGA.drug.activity) + geom_boxplot(aes(x=reorder(Drug,desc(iqr)),y=NetworkActivity)) + theme(axis.text.x=element_blank()) + xlab("Drug") + ylab("Network Activity") + ggtitle("Distrubution of TCGA Network Activity")
+```
+
+```{r Classification and Coherence, include=FALSE}
+##Calculate cutoffs and append to dataset
+TCGA.drug.activity<- TCGA.drug.activity %>% mutate(firstcut=calc_first_interval(NetworkActivity)) %>% mutate(secondcut=calc_second_interval(NetworkActivity))
+##Assemble pdgsc drug network actvity
+pdgsc.drug.activity.list<-vector(mode="list",length=n_groups(pdgscactivity))
+for (x in 1:n_groups(pdgscactivity)){
+  df<-data.frame(
+    rep(unlist(access_group(pdgscactivity,"Drug",x)[1,1]),(ncol(pdgscactivity)-1)),
+    colnames(pdgscactivity)[-1],
+    t(access_group(pdgscactivity,"Drug",x))[-1,]
+  )
+  
+    colnames(df)<-c("Drug","Patient","NetworkActivity")
+    
+    df$NetworkActivity<-as.numeric(df$NetworkActivity)
+  
+    pdgsc.drug.activity.list[[x]]<-df
+}
+pdgsc.drug.activity<-bind_rows(pdgsc.drug.activity.list)
+  pdgsc.drug.activity<-pdgsc.drug.activity %>% group_by(Drug)
+  
+##Classify pdgsc drug network response
+pdgsc.drug.activity.list<-vector(mode="list",length=n_groups(pdgscactivity))
+  
+for (x in 1:n_groups(pdgscactivity)){
+  df<-data.frame(
+    access_group(pdgsc.drug.activity,"Drug",x)
+  )
+  
+    df<- df %>% mutate(NetworkActivity,NetworkResponse=classify_response(NetworkActivity,access_group(TCGA.drug.activity,"Drug",x)$firstcut[1],access_group(TCGA.drug.activity,"Drug",x)$secondcut[1]))
+  
+    pdgsc.drug.activity.list[[x]]<-df
+}
+pdgsc.drug.activity<-bind_rows(pdgsc.drug.activity.list)
+  pdgsc.drug.activity<-pdgsc.drug.activity %>% group_by(Drug)
+  
+##Append 1-AUC values to drug activity
+pdgsc.drug.activity.list<-vector(mode="list",length=n_groups(pdgscOneMinusAUC))
+  
+for (x in 1:n_groups(pdgscOneMinusAUC)){
+  df<-data.frame(
+    rep(unlist(access_group(pdgscOneMinusAUC,"Drug",x)[1,1]),(ncol(pdgscOneMinusAUC)-1)),
+    colnames(pdgscOneMinusAUC)[-1],
+    t(access_group(pdgscOneMinusAUC,"Drug",x))[-1,]
+  )
+  
+    colnames(df)<-c("Drug","Patient","OneMinusAUC")
+    
+    df$OneMinusAUC<-as.numeric(df$OneMinusAUC)
+  
+    pdgsc.drug.activity.list[[x]]<-df
+}
+  
+pdgsc.drug.activity<-bind_cols(pdgsc.drug.activity,bind_rows(pdgsc.drug.activity.list)[,3])
+  colnames(pdgsc.drug.activity)[5]<-"OneMinusAUC"
+  
+## Classify 1-AUC values based on the entire cohort (not drug specific)
+  pdgsc.drug.activity<-bind_cols(pdgsc.drug.activity,data.frame(range01(pdgsc.drug.activity$OneMinusAUC)),data.frame(range01(pdgsc.drug.activity$OneMinusAUC)))
+    colnames(pdgsc.drug.activity)[6:7]<-c("ScaledAUC","AUCResponse")
+  
+  pdgsc.drug.activity$AUCResponse[pdgsc.drug.activity$ScaledAUC>0.666]<-"1"
+  pdgsc.drug.activity$AUCResponse[pdgsc.drug.activity$ScaledAUC<0.333]<-"-1"
+  pdgsc.drug.activity$AUCResponse[pdgsc.drug.activity$ScaledAUC<0.666&pdgsc.drug.activity$ScaledAUC>0.333]<-"0"
+  
+##Calculate coherence
+  pdgsc.drug.activity$Coherence<-pdgsc.drug.activity$NetworkResponse==pdgsc.drug.activity$AUCResponse
+  pdgsc.drug.activity$CoherenceGroup<-pdgsc.drug.activity$NetworkResponse==pdgsc.drug.activity$AUCResponse
+  
+  pdgsc.drug.activity$CoherenceGroup[pdgsc.drug.activity$NetworkResponse==1&pdgsc.drug.activity$Coherence==T]<-"Responder"
+  pdgsc.drug.activity$CoherenceGroup[pdgsc.drug.activity$NetworkResponse==0&pdgsc.drug.activity$Coherence==T]<-"Neutral"
+  pdgsc.drug.activity$CoherenceGroup[pdgsc.drug.activity$NetworkResponse==-1&pdgsc.drug.activity$Coherence==T]<-"Nonresponder"
+  pdgsc.drug.activity$CoherenceGroup[pdgsc.drug.activity$Coherence==F]<-"Not Coherent"
+##Create Heatmap
+  coherence.heatmap<-ggplot(pdgsc.drug.activity,aes(x=Patient,y=Drug,fill=CoherenceGroup)) + geom_tile() + scale_fill_manual(values=c("blue","red","grey","green")) + theme(axis.text.x=element_blank())
+##Compute number of coherence in each drug and graph
+pdgsc.drug.activity<- pdgsc.drug.activity %>% mutate(CoherenceCount=sum(Coherence),by_group=T)
+CoherenceCount.graph<-ggplot(pdgsc.drug.activity,aes(x=reorder(Drug,CoherenceCount),y=CoherenceCount))+geom_point() + ggtitle("Coherence Count by Drug") + xlab("Drug") + ylab("Coherence Count") + theme(axis.text.x=element_blank()) + geom_hline(yintercept=18)
+ResponseSums<-pdgsc.drug.activity %>% group_by(Drug) %>% arrange(CoherenceCount) %>% filter(row_number()==1)
+ResponseSums<- bind_cols(ResponseSums[,c(1,10)])
+##Save csvs
+setwd("..")
+  write_csv(pdgsc.drug.activity,"output/pdgsc.drug.activity.csv")
+  write_csv(TCGA.drug.activity,"output/TCGA.drug.activity.csv")
+  write_csv(ResponseSums,"output/ResponseSums.csv")
+  ggsave(plot=coherence.heatmap,"output/coherence.heatmap.pdf")
+```
+
+```{r Response Sums, include=FALSE}
+ResponseSums<-pdgsc.drug.activity %>% group_by(Drug) %>% filter(row_number()==1)
+ResponseSums<-bind_cols(ResponseSums[,c(1,10)],DrugTargets[,6])
+ResponseSums<-ResponseSums %>% arrange(CoherenceCount)
+  ##Add stars to significant drugs
+  ResponseSums$Drug[(n_groups(ResponseSums)-(n_groups(filter(ResponseSums,CoherenceCount>=18)))+1):n_groups(ResponseSums)]<-paste0(filter(ResponseSums,CoherenceCount>=18)$Drug,"*")
+setwd("..")
+write_csv(ResponseSums,"output/ResponseSums.csv")
+```
+
+```{r Network Distributions, echo=FALSE}
+TCGA.drug.distribution.list<-vector(mode="list",length=n_groups(pdgscOneMinusAUC))
+for (x in 1:n_groups(TCGA.drug.activity)){
+  df<-access_group(TCGA.drug.activity,"Drug",x)
+  TCGA.drug.distribution.list[[x]]<-ggplot(df,aes(x=NetworkActivity)) + geom_histogram() + ggtitle(paste(df$Drug[1],"TCGA Network Distribution")) + xlab("Network Activity") + ylab("Count") + xlim(-1.2,1.2)
+}
+pdgsc.drug.distribution.list<-vector(mode="list",length=n_groups(pdgscOneMinusAUC))
+for (x in 1:n_groups(pdgsc.drug.activity)){
+  df<-access_group(pdgsc.drug.activity,"Drug",x)
+  pdgsc.drug.distribution.list[[x]]<-ggplot(df,aes(x=NetworkActivity)) + geom_histogram() + ggtitle(paste(df$Drug[1],"PDGSC Network Distribution")) + xlab("Network Activity") + ylab("Count") + xlim(-1.2,1.2)
+}
+```
+
+```{r Boxplots, echo=FALSE}
+##
+pdgsc.drug.activity$NetworkResponse<-as.factor(pdgsc.drug.activity$NetworkResponse)
+pdgsc.drug.activity$NetworkResponseName<-factor(pdgsc.drug.activity$NetworkResponse,levels=c(1,0,-1),labels=c("Nonresponder","Neutral","Responder"))
+pdgsc.boxplot.list<-vector(mode="list",length=n_groups(pdgscOneMinusAUC))
+for (x in 1:n_groups(pdgsc.drug.activity)){
+  df<-data.frame(access_group(pdgsc.drug.activity,"Drug",x))
+  
+  if (length(unique(df$NetworkResponse))==3){
+  pdgsc.boxplot.list[[x]]<-ggplot(df,aes(x=NetworkResponseName,y=ScaledAUC)) + geom_boxplot(fill=c("red","blue","green")) + ggtitle(paste(unlist(group_keys(pdgsc.drug.activity))[x],"Category Specific Distributions")) + ylab("Scaled 1-AUC") + xlab("Network Categorization")}
+  
+  else if (any(unique(df$NetworkResponse)==-1)){
+    pdgsc.boxplot.list[[x]]<-ggplot(df,aes(x=NetworkResponseName,y=ScaledAUC)) + geom_boxplot(fill=c("red","blue"))+ggtitle(paste(unlist(group_keys(pdgsc.drug.activity))[x],"Category Specific Distributions")) + ylab("Scaled 1-AUC") + xlab("Network Categorization")}
+  
+    else if (any(unique(df$NetworkResponse)==1)){
+    pdgsc.boxplot.list[[x]]<-ggplot(df,aes(x=NetworkResponseName,y=ScaledAUC)) + geom_boxplot(fill=c("blue","green"))+ggtitle(paste(unlist(group_keys(pdgsc.drug.activity))[x],"Category Specific Distributions")) + ylab("Scaled 1-AUC") }
+}
+```
+
+```{r Drug Metadata, include=FALSE}
+##Import raw data files
+setwd("..")
+DrugTargets.raw<-read_csv("data/opentargets_hts_drug_details.csv")
+  DrugTargets.raw$molecule_name<-gsub("HCI","HCl",DrugTargets.raw$molecule_name)
+  DrugTargets.raw<-DrugTargets.raw[DrugTargets.raw$molecule_name %in% pdgscactivity$Drug,]
+  DrugTargets.raw<-DrugTargets.raw %>% group_by(molecule_name) %>% filter(row_number()==1) %>% arrange(molecule_name)
+  
+  
+metadata.raw<-read_csv("data/HTS_PDGSC_Drug_Ranking_Table.csv")
+  metadata.raw<-metadata.raw[tolower(metadata.raw$Drug) %in% tolower(pdgscactivity$Drug),]
+  metadata.raw<-metadata.raw %>% group_by(Drug) %>% filter(row_number()==1) %>% arrange(Drug)
+##Create metadata table if tables are collated correctly
+if (all(tolower(metadata.raw$Drug)==tolower(DrugTargets.raw$molecule_name))){
+metadata<-bind_cols(DrugTargets.raw[,c(2,3,6)],metadata.raw[,c(3,4)])
+}
+```
+
+# **Summary Results** {.tabset}
+
+## TCGA Network Activity Range
+
+```{r Summary Results, echo=FALSE}
+TCGAranges.graph
+```
+
+## Coherence Table
+
+```{r Coherence Table, echo=FALSE}
+kable(ResponseSums,col.names=c("Drug","Coherence Count","Mechanism"))
+```
+
+## Coherence Graph
+
+```{r Coherence Graph, echo=FALSE}
+CoherenceCount.graph
+```
+
+## Coherence Heatmap
+
+```{r Coherence Heatmap, echo=FALSE}
+coherence.heatmap
+```
+
+
+# **Individual Drug Data** {.tabset}
+
+```{r IndividualDrugTabs, echo=FALSE, message=FALSE, warning=FALSE, results="asis"}
+for(x in 1:length(pdgscGraphList)){
+  cat('\n##', unlist(group_keys(pdgsc.drug.activity))[x], '\n')
+  print(kable(metadata[x,],col.names=c("Molecule Name","Molecule Type","Max Trial Phase","Recommendation","Trade Name")))
+  print(pdgscGraphList[[x]])
+  print(pdgsc.boxplot.list[[x]])
+  print(pdgscDRC.graphs.list[[x]])
+  print(TCGA.drug.distribution.list[[x]])
+  print(pdgsc.drug.distribution.list[[x]])
+  cat('\n')}
+```
+
+# **Visual Inspection and Discussion**
+
+```{r Visual Inspection Input, include=FALSE}
+setwd("..")
+VisualInspection<-read_csv("data/VisualInspection.csv")
+  VisualInspection<-VisualInspection %>% arrange(ReflectsDistribution) %>% arrange(DifferentialResponse) %>% arrange(AUC) %>% arrange(Coherence)
+  write_csv(VisualInspection,"output/top_drugs_VisualInspection.csv")
+FDRrates<-read_csv("data/PDGSC_new_perm_fdr.csv")
+```
+
+## Visual Inspection
+  
+```{r Visual Inspection Table, echo=FALSE}
+options(knitr.kable.NA = "")
+
+kable(VisualInspection,col.names=c("Drug","Coherence","AUC","Differential Response","Reflects Distribution"))
+```
+
+The above table shows 4 metrics relating to gbmMINER's predictive power of future patients:
+
+**High Coherence** - A given drug is marked if there are ≥18 coherent members between network activity categorization and 1-AUC categorization. The cutoff of 18 was chosen based on a FDR of 0.0694, as calculated through a permutation test.
+
+**AUC Response** - A given drug is marked if the drug response curve shows an overall decrease in percent viability as a function of dosage. If a drug shows roughly stable percent viability despite increasing drug dosages, this suggests that the drug does not play a role in reducing the viability of GSCs at the concentration levels used in the screen.
+
+**Differential Response** - A given drug is marked if the category specific boxplots show roughly different responses based on network activity categorization. If a differential response is seen, this suggests that the methods for categorizing experimental response and network activity is reasonable way of separating patient response. Notably, this metric may suffer from the relatively small PDGSC sample size (n=35), as some network activity categories only have one member representing it, reducing confidence in the ability to judge whether different network activity categorizations truely differ in terms of experimental response.
+
+**Reflects Distribution** - A given drug is marked if the distribution of PDGSC network activity roughly reflects the distribution of TCGA network activity. If there is a similar distribution between the two, and a differential response is seen, this suggests that there may be a biological basis for the patient's differential response, rather than being caused by sampling errors. However, like the differential response metric, this metric also suffers from a small sample size, as the relatively different PDGSC sample size (n=35) and TCGA sample size (n=548) reduces confidence in classifying them as similar distributions.
+
+Through the rank-ordering of drugs based on the order of metrics listed above (I.E. Coherence is treated as a higher priority than AUC response), the above list is a tentative rank-ordered list of drugs for further testing.
+
+## Discussion
+
+In terms of coherence, 23 of 61 drugs demonstrated significant coherence (≥18 coherent members, FDR=0.0694). Additionally, the visual inspection metrics as outlined above result in a tentative, rank-ordered list of drugs for which gbmMINER may have predictive power. Of the 4 metrics above, the two that may be the most important are coherence and AUC, mainly because differential response and the similarity of distribution metrics are highly dependent on sample size. For differential response, some drugs have few or no members in a specific network categorization group, reducing confidence in this metric. For similarity of distribution, the vastly different PDGSC sample size (n=35) from the TCGA sample size (n=548) reduces confidence in this metric. Because of this, the top 15 drugs which have both coherence and AUC response may be of particular focus.

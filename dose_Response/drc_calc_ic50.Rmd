@@ -1,0 +1,273 @@
+---
+title: "Dose response DRC"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r libs}
+
+library(readr)
+library(tidyverse)
+library(magrittr)
+library(drc)
+library(stringr)
+library(tibble)
+library(data.table)
+library(ggplot2)
+library(scales)
+library(gridExtra)
+library(grid)
+library(nplr)
+
+
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+
+
+
+```{r}
+
+auc_all <-read.csv("/mnt/kazuki/GBM/Introduction/HTS/raw_AUC_data_all_PDGSC.csv")
+colnames(auc_all) <- c("Compounds", "Replicates", "Doses","sample", "viability")
+```
+
+
+
+```{r function}
+
+## Plot dose response curve and show various model statistics
+## mat - data.frame of dose response data
+## drug - name of drug
+## pidd - pid identifying cell line,
+## stats - data.frame of package variable estimates produced
+##         by doDRCTests
+compareDRCstats <- function(mat, drug, pidd, stats, xmax=NULL) {
+  
+   cat("\n### ", drug, ": ", pidd, "  \n\n  ")
+  
+   ## get drc data
+  mat %>%
+    dplyr::filter(Compound==drug) %>%
+    dplyr::filter(pid==pidd)  ->
+    drc1
+  doses <- drc1$dose[1:10]
+  
+  ## get stats
+  stats %>%
+    dplyr::filter(Compound==drug) %>%
+    dplyr::filter(pid==pidd)  ->
+    stat1
+  
+  maxi <- max(drc1$viability)
+  xmin <- min(doses, stat1$IC50_parv, stat1$IC50_ll4, stat1$IC50_ll42)
+  
+  ##ggplot(drc1, aes(x=dose, y=viability)) + geom_point() +
+   ##  scale_x_log10() 
+    
+  gg1 <- ggplot(drc1, aes(x=dose, y=viability)) + geom_point() +
+    scale_x_log10() +
+    geom_line(aes(color=as.factor(Replicates))) +
+    ylim(0, maxi) + 
+    ylab("percent viability") + ggtitle(paste(drug, pidd)) +
+    guides(color="none") +
+    xlab("dose M (log 10 scale)") +
+    geom_smooth(method = drm, method.args = list(fct = L.4()), se = FALSE, color="black") +
+    geom_hline(yintercept=c(stat1$ymin_parv, stat1$ymax_parv), 
+               linetype="dotted", color="red", linewidth=1) +
+    geom_vline(xintercept=c(stat1$IC50_parv, stat1$IC50_ll4), 
+               linetype="dotted", 
+               color=c("red","orange"), linewidth=1) +
+    geom_vline(xintercept=c(stat1$IC50_ll42, stat1$IC50_ll41), 
+               linetype="dashed", 
+               color=c("purple", "green"), linewidth=1) +
+    geom_hline(yintercept=c(stat1$ymin_ll4, stat1$ymax_ll4), 
+               linetype="dotted", color="orange",  linewidth=1) +
+    geom_hline(yintercept=c(stat1$ymin_ll42, stat1$ymax_ll42), 
+               linetype="dotted", color="purple", linewidth=1 ) +
+    geom_hline(yintercept=c(stat1$ymin_np, stat1$ymax_ll41), 
+               linetype="dotted", color="green", linewidth=1 ) +
+    annotate("text", x = c(rep(doses[9], 4)), 
+             y =c(maxi, maxi-15, maxi-30, maxi-45), 
+             label = c("parvi", "LL4 (4)", "LL4 (2)", "LL4 (1)"),
+             color=c("red", "orange", "purple", "green"),
+             size=6) +
+    theme(text = element_text(size = 20))
+ 
+  cat("\n  ")
+  print(gg1)
+  
+  cat("  \n  ")
+  
+}
+
+
+
+## Apply a variety of drc packages and models to dose response data and
+## return relevant statistics
+## mat - data.frame of drc data
+## drug- name of drug
+## pidd - pid identifying cell line
+## robbie - method of rho estimation for drm. mean is the default
+##          for drm
+doDRCTests <- function(mat, drug, pidd, robbie="mean") {
+   
+    mat %>%
+    dplyr::filter(Compound==drug) %>%
+    dplyr::filter(pid==pidd)  ->
+    drc1
+   
+   ## set controls for drm
+   controll <- drmc(constr=TRUE, noMessage=TRUE, maxIt=1000,
+                    method="Nelder-Mead")
+   
+   ret_ll4 <- NULL
+   tryCatch(ret_ll4 <- drm(viability~dose, data=drc1, 
+             fct=LL.4(names = c("Slope", "Lower Limit", "Upper Limit", "ED50"),
+                      fixed=(c(NA, NA, NA, NA))), robust=robbie),
+             error=function(e) {})
+  if(is.null(ret_ll4)) {
+    ic501 <- NA
+    ymin1 <- NA 
+    ymax1 <- NA
+  } else {
+     summ <- summary(ret_ll4)$coefficients
+     ic501 <- summ[4,1]
+     ymin1 <- summ[2,1]
+     ymax1 <- summ[3,1]
+     ymax1 <- ifelse(ymax1 >= 300, NA, ymax1)
+  }
+  stats <- data.frame(method="LL4",Compound=drug, pid=pidd, 
+                      Ymin=ymin1, Ymax=ymax1, IC50=ic501)
+  ymax_parv <- drc1$Ymax[1]
+ 
+   
+   ret_ll4 <- NULL
+   ymax_l4 <- mean(drc1$viability[drc1$dose==min(drc1$dose)], na.rm=TRUE)
+   tryCatch(ret_ll4 <- drm(viability~dose, data=drc1, 
+             fct=LL.4(fixed=c(NA, 0, ymax_parv, NA),
+                      names = c("Slope", "Lower Limit", "Upper Limit", "ED50")),
+             robust=robbie),
+             error=function(e) {})
+  if(is.null(ret_ll4)) {
+    ic502 <- NA
+  } else {
+    summ <- summary(ret_ll4)$coefficients 
+    ic502 <- summ[2,1] 
+  }
+    
+ stats <- rbind(stats, data.frame(method="LL4_2params",
+                                  Compound=drug, pid=pidd, 
+                      Ymin=0, Ymax=ymax_parv, IC50=ic502))
+ 
+  ret_ll4 <- NULL
+   ymax_l4 <- mean(drc1$viability[drc1$dose==min(drc1$dose)], na.rm=TRUE)
+   tryCatch(ret_ll4 <- drm(viability~dose, data=drc1, 
+             fct=LL.4(fixed=c(NA, NA, ymax_parv, NA),
+                      names = c("Slope", "Lower Limit", "Upper Limit", "ED50")),
+             robust=robbie),
+             error=function(e) {})
+  if(is.null(ret_ll4)) {
+    ic503 <- NA
+  } else {
+    summ <- summary(ret_ll4)$coefficients 
+    ymin1 <- summ[2,1]
+    ic503 <- summ[3,1] 
+  }
+    
+ stats <- rbind(stats, data.frame(method="LL4_1params",
+                                  Compound=drug, pid=pidd, 
+                      Ymin=ymin1, Ymax=ymax_parv, IC50=ic503))
+ 
+ if(FALSE) {
+    ## test nplr defaults 
+    np_res <- NULL
+      tryCatch(np_res <- summary(nplr(x=drc1$dose, y=drc1$viability, 
+                           npars = 4, silent = T)),
+                error=function(e) {})
+     if(is.null(np_res)) {
+       ic501 <- NA
+       ymin1 <- NA 
+       ymax1 <- NA
+     } else {
+        ic501 <- np_res["IC50",1]
+        ymin1 <- np_res["params.bottom",1]
+        ymax1 <- np_res["params.top",1]
+     }
+    
+    stats <- rbind(stats, data.frame(method="nplr_all",
+                                     Compound=drug, pid=pidd, 
+                  Ymin=ymin1, 
+                  Ymax=ymin1, 
+                  IC50=ic501))
+    }
+     
+ return(stats)
+}
+
+```
+
+
+
+```{r}
+Run_drc_calc <- function(mat, drug, pidd){
+
+  mat %>%
+    dplyr::filter(Compounds==drug) %>%
+    dplyr::filter(sample==pidd)  ->
+    auc_plot_data
+  
+tryCatch(drc_model <- drm(viability~Doses, data= auc_plot_data, fct=LL.4(names = c("Slope", "Lower Limit", "Upper Limit", "ED50")), robust = "mean"), error=function(e) {})
+
+
+if(is.null(drc_model)) {
+    ic501 <- NA
+    ymin1 <- NA 
+    ymax1 <- NA
+  } else {
+     summ <- summary(drc_model)$coefficients
+     ic501 <- summ[4,1]
+     ymin1 <- summ[2,1]
+     ymax1 <- summ[3,1]
+     ymax1 <- ifelse(ymax1 >= 300, NA, ymax1)
+  }
+  stats <- data.frame(method="LL4",Compound=drug, pid=pidd, 
+                      Ymin=ymin1, Ymax=ymax1, IC50=ic501)
+  
+  return(stats)
+}
+```
+
+
+```{r}
+## all drugs in screen
+drugs <- unique(auc_all$Compound)
+
+## Apply model tests for all drug/pid combos
+## Ignore the multiple errors as these are due to method 
+## failure and are caught in tryCatch
+outie <- NULL
+for(d in drugs) {
+   drcd <- auc_all %>% dplyr::filter(Compounds==d)
+   
+   ## get all pids for this drug
+   pidds <- unique(drcd$sample) 
+   for(p in pidds) {
+      ##print(paste(d, p))
+      res <- Run_drc_calc(drcd, d, p)
+      outie <- rbind(outie, res)
+   }
+}
+
+
+
+
+```
+
